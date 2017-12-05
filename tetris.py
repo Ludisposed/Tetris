@@ -50,7 +50,7 @@ def find_best_score(board, piece):
             break
         
         for _ in range(4):
-            for offset in range(len(board.board[0]) - len(piece.piece[0])):
+            for offset in range(len(board.board[0]) - len(piece.piece[0]) + 1):
                 if board.piece_fits(piece,(level, offset)):
 
                     # Surface area - level to drop
@@ -74,7 +74,7 @@ def tetrisGame(pieces):
         board.place_piece(best_rot, best_pos)
         
         for i in board.completed_line():
-            board.clearline(i)
+            board.clear_line(i)
             score += 1
 
         print(board)
