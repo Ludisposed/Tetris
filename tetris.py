@@ -29,6 +29,7 @@ class Board():
         for y, line in enumerate(piece.piece):
             for x, block in enumerate(line):
                 if piece.piece[y][x] == '#' and self.board[self.row_num + y - piece_height - level][offset + x] != '.':
+                    
                     return False
         return True
     def try_place(self, piece, pos, rotate):
@@ -60,17 +61,16 @@ class Board():
 
 def find_best_score(board, piece):
     results = []
-    for level in range(len(board.board)):   
-        for offset in range(len(board.board[0]) - len(piece.piece[0]) + 1):
-            for rotate in range(4):
+    for level in range(len(board.board)):
+        for rotate in range(4):  
+            for offset in range(len(board.board[0]) - len(piece.piece[0]) + 1):
                 if board.piece_fits(piece,(level, offset)):
-                    print(piece, level, offset)
+                    
                     score = board.try_place(piece.piece, (level, offset), rotate)
                     
                     results.append([piece.piece, (level, offset), score, len(results)])
-                piece.rotate()
-    for i in range(12):
-        print(results[i])
+            piece.rotate()
+    
     best = max(results, key = lambda x: x[2])
     print("--------")
     print("[*] best")
