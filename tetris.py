@@ -96,16 +96,17 @@ def find_best_score(board, piece):
     results = []
     for level in range(len(board.board)):   
         for offset in range(len(board.board[0]) - len(piece.piece[0]) + 1):
-            for _ in range(4):
-                if board.piece_fits(piece,(level, offset)):
+            if board.piece_fits(piece,(level, offset)):
+                for _ in range(4):
                     block_num = board.try_place(piece.piece, (level, offset))
-                    results.append([piece.piece, (level, offset), block_num])
-                piece.rotate()
+
+                    results.append([piece.piece, (level, offset), block_num, len(results)])
+                    piece.rotate()
     
     best = max(results, key = lambda x: x[2])
     print("--------")
     print("[*] best")
-    print(best[0], best[1])
+    print(best)
     print("--------")    
     return best[0], best[1]
 
