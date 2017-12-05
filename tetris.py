@@ -31,7 +31,8 @@ class Board():
                 if piece.piece[y][x] == '#' and self.board[self.row_num + y - piece_height - level][offset + x] != '.':
                     return False
         return True
-    def try_place(self, piece, pos):
+    def try_place(self, piece, pos, rotate):
+        weight = [1 for _ in range(18)] + [3,100]
         level, offset = pos
         piece_height = len(piece)
         board = [b[:] for b in self.board]
@@ -39,7 +40,9 @@ class Board():
             for x, block in enumerate(line):
                 if piece[y][x] != '.':
                     board[self.row_num + y - piece_height - level][offset + x] = piece[y][x]
-        return len(list(filter(lambda x: "." not in x, board)))
+        
+        score = sum([i * weight[i] for j in range(len(board[0])) for i in range(len(board)) if board[i][j] == "#"])
+        return score
 
     def place_piece(self, best_rot, best_pos):
         
@@ -52,43 +55,6 @@ class Board():
         
     
     def __str__(self):
-        '''
-        [*] Here is an error, so I changed the board logic
-
-        Here is the original board like
-        With [[".","#","."],["#","#","#"]], 
-             [["#",".","."],["#","#","#"]]
-        these two in it
-        ######....
-        .#...#....
-        ..........
-        ..........
-        ..........
-
-        This is the output board like from self.board[::-1]
-
-        ..........
-        ..........
-        ..........
-        .#...#....
-        ######....
-
-        look at the place for [["#",".","."],["#","#","#"]]
-        the result is
-
-        ..#
-        ###
-
-        but piece like
-
-        #..
-        ###
-
-        can't rotate to be that
-
-        So "mirror way" not work right here
-        '''
-        #return '\n'.join(''.join(line) for line in self.board[::-1])
 
         return '\n'.join(''.join(line) for line in self.board)
 
@@ -96,13 +62,15 @@ def find_best_score(board, piece):
     results = []
     for level in range(len(board.board)):   
         for offset in range(len(board.board[0]) - len(piece.piece[0]) + 1):
-            if board.piece_fits(piece,(level, offset)):
-                for _ in range(4):
-                    block_num = board.try_place(piece.piece, (level, offset))
-
-                    results.append([piece.piece, (level, offset), block_num, len(results)])
-                    piece.rotate()
-    
+            for rotate in range(4):
+                if board.piece_fits(piece,(level, offset)):
+                    print(piece, level, offset)
+                    score = board.try_place(piece.piece, (level, offset), rotate)
+                    
+                    results.append([piece.piece, (level, offset), score, len(results)])
+                piece.rotate()
+    for i in range(12):
+        print(results[i])
     best = max(results, key = lambda x: x[2])
     print("--------")
     print("[*] best")
@@ -114,7 +82,7 @@ def tetrisGame(pieces):
     board = Board()
     score = 0
     for p in pieces:
-        print("[*] p: {}".format(p))
+        
         piece = Piece(p)
         best_rot, best_pos = find_best_score(board, piece)
         board.place_piece(best_rot, best_pos)
