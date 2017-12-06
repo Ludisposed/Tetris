@@ -30,28 +30,10 @@ class Board():
         for y, line in enumerate(piece.piece):
             for x, block in enumerate(line):
                 if self.max_height + y - piece_height - level > 0 \
-                    and piece.piece[y][x] == '#' \
-                    and self.board[self.max_height + y - piece_height - level][offset + x] != '.':
+                and piece.piece[y][x] == '#' \
+                and self.board[self.max_height + y - piece_height - level][offset + x] != '.':
                     return False
         return True
-
-
-    def score_piece(self, piece, pos, rotate):
-        # This one is funky
-        # Should board be the one controlling the scoring of pieces? I don;t think so...
-        # Beter move this to either a Solver class or keep it functional
-        weight = [1 for _ in range(18)] + [3,100]
-        level, offset = pos
-        piece_height = len(piece)
-        board = [b[:] for b in self.board]
-        for y, line in enumerate(piece):
-            for x, block in enumerate(line):
-                if self.row_num + y - piece_height - level > 0 and piece[y][x] != '.':
-                    board[self.max_height + y - piece_height - level][offset + x] = piece[y][x]
-        
-        score = sum([i * weight[i] for j in range(len(board[0])) for i in range(len(board)) if board[i][j] == "#"])
-        return score
-
 
     def place_piece(self, rotation, position):        
         level, offset = position
@@ -64,29 +46,38 @@ class Board():
     def __str__(self):
         return '\n'.join(''.join(line) for line in self.board)
 
-
-# MAYBE?! Solver class
 class Solver():
     def __init__(self, board, piece):
-        pass
+        self.board = board
+        self.piece = piece
 
-def find_best_score(board, piece):
-    results = []
+    def find_best_score(self):
+        results = []
+        for level in range(len(self.board.board)):            
+            for rotate in range(4):  
+                for offset in range(len(self.board.board[0]) - len(self.piece.piece[0]) + 1):
+                    if self.board.piece_fits(self.piece, (level, offset)):
+                        
+                        score = self.score_piece((level, offset), rotate)                    
+                        results.append([self.piece.piece, (level, offset), score, len(results)])
+                        
+                self.piece.rotate()
+        
+        best = max(results, key = lambda x: x[2])
+        return best[0], best[1]
 
-    # You don't have to calculate all the board! Only untill the next all empty line
-    # Because then they drop down! (Maybe error here?)
-    for level in range(len(board.board)):
-        for rotate in range(4):  
-            for offset in range(len(board.board[0]) - len(piece.piece[0]) + 1):
-                if board.piece_fits(piece,(level, offset)):
-                    score = board.score_piece(piece.piece, (level, offset), rotate)                    
-                    results.append([piece.piece, (level, offset), score, len(results)])
-                    
-            piece.rotate()
-    
-    best = max(results, key = lambda x: x[2])
-    return best[0], best[1]
-
+    def score_piece(self, pos, rotate):
+        weight = [1 for _ in range(18)] + [3, 100]
+        level, offset = pos
+        piece_height = len(self.piece.piece)
+        board = [b[:] for b in self.board.board]
+        for y, line in enumerate(self.piece.piece):
+            for x, block in enumerate(line):
+                if self.board.max_height + y - piece_height - level > 0 and self.piece.piece[y][x] != '.':
+                    board[self.board.max_height + y - piece_height - level][offset + x] = self.piece.piece[y][x]
+        
+        score = sum([i * weight[i] for j in range(len(board[0])) for i in range(len(board)) if board[i][j] == "#"])
+        return score
 
 def tetrisGame(pieces):
     board = Board()
@@ -94,26 +85,23 @@ def tetrisGame(pieces):
     for p in pieces:
         
         piece = Piece(p)
-        rotation, position = find_best_score(board, piece)
+        solver = Solver(board, piece)        
+        rotation, position = solver.find_best_score()
         board.place_piece(rotation, position)
         
         for i in board.completed_line():
             board.clear_line(i)
             score += 1
 
+        print(board)
+        print()
+        
     return score
-
-
-######
-## Good code ^^
-##
-## [self.max_height + y - piece_height - level][offset + x]
-## Do this quite alot, maybe make a class attribute?
-######
 
 
 if __name__ == "__main__":
 
+    '''    
     pieces = [[[".","#","."],["#","#","#"]], 
               [["#",".","."],["#","#","#"]], 
               [["#","#","."],[".","#","#"]], 
@@ -123,7 +111,7 @@ if __name__ == "__main__":
 
     print(tetrisGame(pieces))
 
-    '''
+
     Expected output of the board after the last piece
     ...
     . . . . . . . . . .
@@ -134,8 +122,6 @@ if __name__ == "__main__":
     # # . . . . . . # #
     # # . . . . . . # #
     . # . # . # # . # #
-    '''
-
 
     test1 = [[[".","#","."],["#","#","#"]], 
              [["#",".","."],["#","#","#"]], 
@@ -160,6 +146,7 @@ if __name__ == "__main__":
      [["#","#"],["#","#"]]]
     output = 1
     print("test3 -- output: {}, expected: {}".format(tetrisGame(test3), output))
+    '''
 
     test4 = [[[".","#","#"],["#","#","."]], 
      [[".","#","."],["#","#","#"]], 
@@ -180,6 +167,7 @@ if __name__ == "__main__":
     output = 3
     print("test4 -- output: {}, expected: {}".format(tetrisGame(test4), output))
 
+    '''
     test5 = [[[".","#","."],["#","#","#"]], 
      [[".",".","#"],["#","#","#"]], 
      [["#","#","."],[".","#","#"]], 
@@ -188,3 +176,4 @@ if __name__ == "__main__":
      [["#","#","."],[".","#","#"]]]
     output = 1
     print("test5 -- output: {}, expected: {}".format(tetrisGame(test5), output))
+    '''
