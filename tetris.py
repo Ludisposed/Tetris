@@ -53,7 +53,11 @@ class Solver():
 
     def find_best_score(self):
         results = []
-        for level in range(len(self.board.board)):            
+        for level in range(len(self.board.board)):
+            if level > 0 and self.board.board[self.board.max_height - level - 1].count('#') == 0:
+                # Will not change but just drop to a below level, so break
+                break
+            
             for rotate in range(4):  
                 for offset in range(len(self.board.board[0]) - len(self.piece.piece[0]) + 1):
                     if self.board.piece_fits(self.piece, (level, offset)):
