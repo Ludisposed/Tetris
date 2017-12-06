@@ -32,6 +32,7 @@ class Board():
                 if self.max_height + y - piece_height - level > 0 \
                 and piece.piece[y][x] == '#' \
                 and self.board[self.max_height + y - piece_height - level][offset + x] != '.':
+                    # TODO if obstructed by a thingie above... cannot drop DOWN! (This is inconsistent with CODEFIGHTS)
                     return False
         return True
 
