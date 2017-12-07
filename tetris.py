@@ -32,7 +32,6 @@ class Board():
                 if self.max_height + y - piece_height - level > 0 \
                 and piece.piece[y][x] == '#' \
                 and self.board[self.max_height + y - piece_height - level][offset + x] != '.':
-                    # TODO if obstructed by a thingie above... cannot drop DOWN! (This is inconsistent with CODEFIGHTS)
                     return False
         return True
 
@@ -48,11 +47,10 @@ class Board():
         return '\n'.join(''.join(line) for line in self.board)
 
 class Solver():
-    def __init__(self, board, piece):
+    def __init__(self, board):
         self.board = board
-        self.piece = piece
 
-    def find_best_score(self):
+    def find_best_score(self, piece):
         results = []
         for level in range(len(self.board.board)):
             if level > 0 and self.board.board[self.board.max_height - level - 1].count('#') == 0:
@@ -60,38 +58,39 @@ class Solver():
                 break
             
             for rotate in range(4):  
-                for offset in range(len(self.board.board[0]) - len(self.piece.piece[0]) + 1):
-                    if self.board.piece_fits(self.piece, (level, offset)):
+                for offset in range(len(self.board.board[0]) - len(piece.piece[0]) + 1):
+                    if self.board.piece_fits(piece, (level, offset)):
                         
-                        score = self.score_piece((level, offset), rotate)                    
-                        results.append([self.piece.piece, (level, offset), score, len(results)])
+                        score = self.score_piece(piece, (level, offset), rotate)                    
+                        results.append([piece.piece, (level, offset), score, len(results)])
                         
-                self.piece.rotate()
+                piece.rotate()
         
         best = max(results, key = lambda x: x[2])
         return best[0], best[1]
 
-    def score_piece(self, pos, rotate):
+    def score_piece(self, piece, pos, rotate):
         weight = [1 for _ in range(18)] + [3, 100]
         level, offset = pos
-        piece_height = len(self.piece.piece)
+        piece_height = len(piece.piece)
         board = [b[:] for b in self.board.board]
-        for y, line in enumerate(self.piece.piece):
+        for y, line in enumerate(piece.piece):
             for x, block in enumerate(line):
-                if self.board.max_height + y - piece_height - level > 0 and self.piece.piece[y][x] != '.':
-                    board[self.board.max_height + y - piece_height - level][offset + x] = self.piece.piece[y][x]
+                if self.board.max_height + y - piece_height - level > 0 and piece.piece[y][x] != '.':
+                    board[self.board.max_height + y - piece_height - level][offset + x] = piece.piece[y][x]
         
         score = sum([i * weight[i] for j in range(len(board[0])) for i in range(len(board)) if board[i][j] == "#"])
         return score
 
 def tetrisGame(pieces):
     board = Board()
+    solver = Solver(board)
     score = 0
+    
     for p in pieces:
         
-        piece = Piece(p)
-        solver = Solver(board, piece)        
-        rotation, position = solver.find_best_score()
+        piece = Piece(p)      
+        rotation, position = solver.find_best_score(piece)
         board.place_piece(rotation, position)
         
         for i in board.completed_line():
@@ -113,10 +112,7 @@ if __name__ == "__main__":
               [["#","#","#","#"]], 
               [["#","#","#","#"]], 
               [["#","#"],["#","#"]]]
-
     print(tetrisGame(pieces))
-
-
     Expected output of the board after the last piece
     ...
     . . . . . . . . . .
@@ -127,7 +123,6 @@ if __name__ == "__main__":
     # # . . . . . . # #
     # # . . . . . . # #
     . # . # . # # . # #
-
     test1 = [[[".","#","."],["#","#","#"]], 
              [["#",".","."],["#","#","#"]], 
              [["#","#","."],[".","#","#"]], 
@@ -136,7 +131,6 @@ if __name__ == "__main__":
              [["#","#"],["#","#"]]]
     output = 1
     print("test1 -- output: {}, expected: {}".format(tetrisGame(test1), output))
-
     test2 = [[["#","#"],["#","#"]], 
              [["#","#"],["#","#"]], 
              [["#","#"],["#","#"]], 
@@ -145,7 +139,6 @@ if __name__ == "__main__":
              [["#","#"],["#","#"]]]
     output = 2
     print("test2 -- output: {}, expected: {}".format(tetrisGame(test2), output))
-
     test3 = [[["#","#","#","#"]], 
      [["#","#","#","#"]], 
      [["#","#"],["#","#"]]]
