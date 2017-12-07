@@ -23,6 +23,13 @@ class Board():
         del self.board[index]
         self.board.insert(0, ['.' for _ in range(10)])
 
+    def can_drop(self, piece, pos):
+        level, offset = pos
+        for i in range(0, level):
+            # print(i, offset, self.board[i][offset])
+            if self.board[i][offset] == '#':
+               return True
+        return False
 
     def piece_fits(self, piece, pos):
         level, offset = pos
@@ -31,7 +38,8 @@ class Board():
             for x, block in enumerate(line):
                 if self.max_height + y - piece_height - level > 0 \
                 and piece.piece[y][x] == '#' \
-                and self.board[self.max_height + y - piece_height - level][offset + x] != '.':
+                and self.board[self.max_height + y - piece_height - level][offset + x] != '.' \
+                and self.can_drop(piece, (self.max_height + y - piece_height - level, offset + x)):
                     return False
         return True
 
@@ -66,8 +74,8 @@ class Solver():
                         
                 piece.rotate()
         
-        best = max(results, key = lambda x: x[2])
-        return best[0], best[1]
+        rot, pos, *_ = max(results, key = lambda x: x[2])
+        return rot, pos
 
     def score_piece(self, piece, pos, rotate):
         weight = [1 for _ in range(18)] + [3, 100]
