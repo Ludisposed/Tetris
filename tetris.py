@@ -66,7 +66,7 @@ class Solver():
                 for offset in range(len(self.board.board[0]) - len(piece.piece[0]) + 1):
                     if self.board.piece_fits(piece, (level, offset)):
                         
-                        score = self.score_piece(piece, (level, offset), rotate)                    
+                        score = self.score_piece(piece, (level, offset))                    
                         results.append([piece.piece, (level, offset), score, len(results)])
                         
                 piece.rotate()
@@ -74,8 +74,8 @@ class Solver():
         rot, pos, *_ = max(results, key = lambda x: x[2])
         return rot, pos
 
-    def score_piece(self, piece, pos, rotate):
-        weight = [1 for _ in range(18)] + [3, 100]
+    def score_piece(self, piece, pos):
+        weight = [sum(range(1,i+1)) for i in range(1,11)]
         level, offset = pos
         piece_height = len(piece.piece)
         board = [b[:] for b in self.board.board]
@@ -84,7 +84,12 @@ class Solver():
                 if self.board.max_height + y - piece_height - level > 0 and piece.piece[y][x] != '.':
                     board[self.board.max_height + y - piece_height - level][offset + x] = piece.piece[y][x]
         
-        score = sum([i * weight[i] for j in range(len(board[0])) for i in range(len(board)) if board[i][j] == "#"])
+        score = 0
+        for b in board:
+            if '.' not in b:
+                score += 1000
+            else:
+                score += weight[b.count('#')]
         return score
 
 def tetrisGame(pieces):
