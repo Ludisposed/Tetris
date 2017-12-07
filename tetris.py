@@ -35,7 +35,8 @@ class Board():
         piece_height = len(piece.piece)
         for y, line in enumerate(piece.piece):
             for x, block in enumerate(line):
-                if self.can_not_drop(piece, (self.max_height + y - piece_height - level, offset + x)):
+                if (piece.piece[y][x] == '#' and self.board[self.max_height + y - piece_height - level][offset + x] == '#') \
+                   or self.can_not_drop(piece, (self.max_height + y - piece_height - level, offset + x)):
                     return False
         return True
 
@@ -92,8 +93,8 @@ def tetrisGame(pieces):
     score = 0
     
     for p in pieces:
-        
-        piece = Piece(p)      
+        piece = Piece(p)
+        print(piece)
         rotation, position = solver.find_best_score(piece)
         board.place_piece(rotation, position)
         
