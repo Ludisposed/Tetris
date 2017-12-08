@@ -1,3 +1,6 @@
+# The total number of blocks in the rows this piece will occupy after falling down is maximized
+# I think over this sentence, and finally get it
+# It means, after place the piece, those rows it in, add the block number, should be maximized
 class Piece():
     def __init__(self, piece):
         self.piece = piece
@@ -70,45 +73,39 @@ class Board():
 
     def __str__(self):
         return '\n'.join(''.join(line) for line in self.board)
-def best_position(board, piece):
+def find_best_position(board, piece):
     result = []
     for rotate in range(4):
 
         for offset in range(board.max_width - piece.width() + 1):
         
             level = board.drop(piece,offset)
-            result.append([level + piece.height() - 1, rotate, offset])
+            blocks = sum([b.count('#') for b in board.board[level:level+piece.height()]])
+            result.append([blocks, rotate, offset, level + piece.height() - 1])
         piece.rotate()
     #sorry still using `filter` what you hate xD
-    #I just try to avoid using score
-    #I am thinking about if we overthink it
-    #As it ask with same max blocks(really strange this word)
-    #then using least rotate and most left position
-    #so I am thinking if it just ask us to put it down(deeper) as possible
-    #else just put it on most left in original way
     result = list(filter(lambda x: x[0] == max(result, key = lambda x: x[0])[0], result))
     result = list(filter(lambda x: x[1] == min(result, key = lambda x: x[1])[1], result))
     result = list(filter(lambda x: x[2] == min(result, key = lambda x: x[2])[2], result))[0]
     return result
+
 
 def tetrisGame(pieces):
     board = Board()
     score = 0
     for p in pieces:
         piece = Piece(p)
-        level, rotate, offset = best_position(board, piece)
+        _, rotate, offset, level = find_best_position(board, piece)
         
         piece.rotate(rotate)
         board.place_piece(piece ,(level - piece.height() + 1, offset))
-        print(board)
-        print()
+        #print(board)
+        #print()
         for i in board.completed_line():
             board.clear_line(i)
             score += 1
 
     return score
-
-
 
 
 
