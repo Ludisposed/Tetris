@@ -1,23 +1,44 @@
 class Piece():
     def __init__(self, piece):
         self.piece = piece
+    def width(self):
+        return len(self.piece[0])
+    def height(self):
+        return len(self.piece)
 
-    def rotate(self):
-        self.piece = [row for row in zip(*self.piece)][::-1]
-    
+    def rotate(self, times = 1):
+        for i in range(times):
+            # About rotate, I checked the text about challenge you send me before
+            # It said `clockwise`, there once before I remember 
+            # We seem have difference in `clockwise`(that time I ask if you are left hand)
+            # I think clockwise is like
+            '''
+            ---->
+            ^   |
+            |   |
+            |   v
+            <----
+            '''
+
+            #sooo I think
+            '''
+             #
+            ###
+
+            rotate once will be
+
+            #
+            ##
+            #
+            '''
+            self.piece = [row[::-1] for row in zip(*self.piece)]
     def __str__(self):
         return '\n'.join(''.join(line) for line in self.piece)
-
 class Board():
     def __init__(self):
         self.max_height = 20
         self.max_width = 10
-        self.blocks = [0 for _ in range(self.max_height)]
         self.board = [['.' for _ in range(self.max_width)] for __ in range(self.max_height)]
-
-    def update_blocks(self):
-        return [b.count('#') for b in self.board]
-
 
     def completed_line(self):
         for i, line in enumerate(self.board):
@@ -28,102 +49,72 @@ class Board():
         del self.board[index]
         self.board.insert(0, ['.' for _ in range(10)])
 
-    def can_not_drop(self, piece, pos):
-        level, offset = pos
-        for i in range(0, level):
-            if self.board[i][offset] == '#':
-               return True
-        return False
+    def drop(self, piece, offset):
 
-    def piece_fits(self, piece, pos):
-        level, offset = pos
-        piece_height = len(piece.piece)
-        for y, line in enumerate(piece.piece):
-            for x, block in enumerate(line):
-                if (piece.piece[y][x] == '#' and self.board[self.max_height + y - piece_height - level][offset + x] == '#') \
-                   or self.can_not_drop(piece, (self.max_height + y - piece_height - level, offset + x)):
-                    return False
-        return True
+        last_level = self.max_height - piece.height() + 1
+        for level in range(last_level):
+            for i in range(piece.height()):
+                for j in range(piece.width()):
+                    
+                    if self.board[level+i][offset+j] == "#" and piece.piece[i][j] == "#":
 
-    def place_piece(self, rotation, position):        
-        level, offset = position
-        piece_height = len(rotation)
-        for y, line in enumerate(rotation):
-            for x, block in enumerate(line):
-                if rotation[y][x] != '.':
-                    self.board[self.max_height + y - piece_height - level][offset + x] = rotation[y][x]
-        
+                        return level - 1
+        return last_level - 1
+    def place_piece(self, piece, pos):
+        level, offset = pos
+        for i in range(piece.height()):
+            for j in range(piece.width()):
+                if piece.piece[i][j] == "#":
+                    self.board[level+i][offset+j] = piece.piece[i][j]
+
+
     def __str__(self):
         return '\n'.join(''.join(line) for line in self.board)
+def best_position(board, piece):
+    result = []
+    for rotate in range(4):
 
-class Solver():
-    def __init__(self, board):
-        self.board = board
-
-
-    def find_best_score(self, piece):
-        self.board.update_blocks()
-        results = []
-        for level in range(len(self.board.board)):
-            if level > 0 and self.board.board[self.board.max_height - level - 1].count('#') == 0:
-                # Will not change but just drop to a below level, so break
-                break
-            
-            for rotate in range(4):  
-                for offset in range(len(self.board.board[0]) - len(piece.piece[0]) + 1):
-                    if self.board.piece_fits(piece, (level, offset)):
-                        
-                        score = self.score_piece(piece, (level, offset), rotate)                    
-                        results.append([piece.piece, (level, offset), score, len(results)])
-                        
-                piece.rotate()
+        for offset in range(board.max_width - piece.width() + 1):
         
-        rot, pos, *_ = max(results, key = lambda x: x[2])
-        return rot, pos
-
-    def score_piece(self, piece, pos, rotate):
-        level, offset = pos
-        blocks = self.board.blocks[:]
-        #scores = [sum(range(i+1)) for i in range(10)] + [1000]
-
-        #simple score way works better
-        scores = [i*10 for i in range(10)] + [1000]
-        
-        for i in range(len(piece.piece)):
-            blocks[self.board.max_height + i - len(piece.piece) - level] += piece.piece[i].count("#")
-        
-        score = sum([scores[b] for b in blocks])
-        #add this work worse
-        #score = level - rotate + 20 - offset
-        return score
-
-
-        
+            level = board.drop(piece,offset)
+            result.append([level + piece.height() - 1, rotate, offset])
+        piece.rotate()
+    #sorry still using `filter` what you hate xD
+    #I just try to avoid using score
+    #I am thinking about if we overthink it
+    #As it ask with same max blocks(really strange this word)
+    #then using least rotate and most left position
+    #so I am thinking if it just ask us to put it down(deeper) as possible
+    #else just put it on most left in original way
+    result = list(filter(lambda x: x[0] == max(result, key = lambda x: x[0])[0], result))
+    result = list(filter(lambda x: x[1] == min(result, key = lambda x: x[1])[1], result))
+    result = list(filter(lambda x: x[2] == min(result, key = lambda x: x[2])[2], result))[0]
+    return result
 
 def tetrisGame(pieces):
     board = Board()
-    solver = Solver(board)
     score = 0
-    
     for p in pieces:
         piece = Piece(p)
-        print(piece)
-        rotation, position = solver.find_best_score(piece)
-        board.place_piece(rotation, position)
+        level, rotate, offset = best_position(board, piece)
         
+        piece.rotate(rotate)
+        board.place_piece(piece ,(level - piece.height() + 1, offset))
+        print(board)
+        print()
         for i in board.completed_line():
             board.clear_line(i)
             score += 1
 
-        print(board)
-        print()
-        
     return score
+
+
+
 
 
 if __name__ == "__main__":
 
-    ''' 
+    
     pieces = [[[".","#","."],["#","#","#"]], 
               [["#",".","."],["#","#","#"]], 
               [["#","#","."],[".","#","#"]], 
@@ -131,7 +122,7 @@ if __name__ == "__main__":
               [["#","#","#","#"]], 
               [["#","#"],["#","#"]]]
     print(tetrisGame(pieces))
-    
+    '''
     Expected output of the board after the last piece
     ...
     . . . . . . . . . .
@@ -143,7 +134,7 @@ if __name__ == "__main__":
     # # . . . . . . # #
     . # . # . # # . # #
     '''
-    '''
+    
     test1 = [[[".","#","."],["#","#","#"]], 
              [["#",".","."],["#","#","#"]], 
              [["#","#","."],[".","#","#"]], 
@@ -165,7 +156,7 @@ if __name__ == "__main__":
      [["#","#"],["#","#"]]]
     output = 1
     print("test3 -- output: {}, expected: {}".format(tetrisGame(test3), output))
-    '''
+    
     
 
     test4 = [[[".","#","#"],["#","#","."]], 
@@ -188,7 +179,7 @@ if __name__ == "__main__":
     print("test4 -- output: {}, expected: {}".format(tetrisGame(test4), output))
 
     
-    '''
+    
     test5 = [[[".","#","."],["#","#","#"]], 
      [[".",".","#"],["#","#","#"]], 
      [["#","#","."],[".","#","#"]], 
@@ -197,4 +188,4 @@ if __name__ == "__main__":
      [["#","#","."],[".","#","#"]]]
     output = 1
     print("test5 -- output: {}, expected: {}".format(tetrisGame(test5), output))
-    '''
+    
