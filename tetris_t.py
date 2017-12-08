@@ -81,7 +81,7 @@ def find_best_position(board, piece):
         
             level = board.drop(piece,offset)
             blocks = sum([b.count('#') for b in board.board[level:level+piece.height()]])
-            result.append([blocks, rotate, offset, level + piece.height() - 1])
+            result.append([blocks, rotate, offset, level])
         piece.rotate()
     #sorry still using `filter` what you hate xD
     result = list(filter(lambda x: x[0] == max(result, key = lambda x: x[0])[0], result))
@@ -98,7 +98,7 @@ def tetrisGame(pieces):
         _, rotate, offset, level = find_best_position(board, piece)
         
         piece.rotate(rotate)
-        board.place_piece(piece ,(level - piece.height() + 1, offset))
+        board.place_piece(piece ,(level, offset))
         #print(board)
         #print()
         for i in board.completed_line():
