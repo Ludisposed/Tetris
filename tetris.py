@@ -1,5 +1,4 @@
-import unittest
-from random import choice
+from random import choice, randint
 
 PIECES = [[[".", "#", "."],
            ["#", "#", "#"]],
@@ -65,51 +64,74 @@ class _2DList:
 class Piece(_2DList):
     def __init__(self):
         super().__init__(self.new_piece(self))
+        self._position = None
     
     def rotate(self, times=1):
         for i in range(times):
             self.data = [row[::-1] for row in zip(*self)]
 
+    @property
+    def position(self):
+        return self._position
+
+    @position.setter
+    def position(self, value):
+        self._position = value
+
 
 class Board(_2DList):
     def __init__(self, width, height):
-        super().__init__(self.new_board('.', width, height))
+        super().__init__(self.new_board(self, '.', width, height))
 
     def completed_line(self):
         for i, line in enumerate(self):
             if line.count('.') == 0:
                 yield i
 
-    def drop(self, piece, offset):
-        last_level = self.max_height - piece.height + 1
-        for level in range(last_level):
-            for i in range(piece.height):
-                for j in range(piece.width):
-                    if self.board[level+i][offset+j] == "#" and piece.piece[i][j] == "#":
-                        return level - 1
-        return last_level - 1
-
     def clear_line(self, index):
         del self[index]
         self.data.insert(0, ['.'] * self.width)
 
-    def place_piece(self, piece, pos):
-        level, offset = pos
+    def _can_drop(self, piece):
+        random_num = randint(0, self.width - piece.width)
+        position_on_board = []
         for i in range(piece.height):
             for j in range(piece.width):
-                if piece.piece[i][j] == "#":
-                    self[level+i][offset+j] = piece.piece[i][j]
+                if piece[i][j] == "#":
+                    if self.data[i][random_num+j] == '#':
+                        return False, None
+                    self.data[i][random_num+j] = piece[i][j]
+                    position_on_board.append([i, random_num + j])
+        return True, position_on_board
 
+    def _can_lower(self, piece):
+        return False
+
+            
 # Single player Tetris game
 def tetris():
+    score = 0
     board = Board(10, 20)
     
-    while board._in_bounds():
+    while True:
         piece = Piece()
-        while piece._not_dropped():
-            # user_input
-            # game_tick
-            pass
+        succes, position = board._can_drop(piece)
+        if succes:
+            piece.position = position
+            print(board)
+            while board._can_lower(piece):
+                # User input?
+                # Lower piece a level after few ticks
+                pass
+
+            for i in board.completed_line():
+                board.clear_line(i)
+                score += 1
+
+        # Game Over
+        else:
+            print("Game Over")
+            break
         
 if __name__ == '__main__':
     tetris()
