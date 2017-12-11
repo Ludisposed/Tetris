@@ -11,3 +11,6 @@ Your task is to implement an algorithm that places each new piece optimally. The
  - GUI (Tkinter)
  - Server (2 Player)
  - AI (AlphaTetris)
+ - Difficult Levels (Random Piece type amount and startup levels)
+ - Update Score System (Clean more levels one time with more Scores)
+ - Clever console mode (haha I don't wanna keep wrong rotate all the time) 
