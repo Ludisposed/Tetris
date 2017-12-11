@@ -16,6 +16,10 @@ class Piece():
         for i in range(times % 4):
             self.piece = [row[::-1] for row in zip(*self.piece)]
 
+    def __eq__(self, other):
+        if isinstance(self, other.__class__):
+            return self.__dict__ == other.__dict__
+        return False
     # Debugging purposes
     def __str__(self):
        return '\n'.join(''.join(line) for line in self.piece)
