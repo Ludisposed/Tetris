@@ -12,8 +12,8 @@ class Piece():
     def height(self):
         return len(self.piece)
 
-    def rotate(self, times = 1):
-        for i in range(times):
+    def rotate(self, times=1):
+        for i in range(times % 4):
             self.piece = [row[::-1] for row in zip(*self.piece)]
 
     # Debugging purposes
@@ -21,10 +21,10 @@ class Piece():
        return '\n'.join(''.join(line) for line in self.piece)
 
 class Board():
-    def __init__(self):
-        self.max_height = 20
-        self.max_width = 10
-        self.board = [['.' for _ in range(self.max_width)] for __ in range(self.max_height)]
+    def __init__(self, width, height):
+        self.max_height = height
+        self.max_width = width
+        self.board = [['.']*width for __ in range(height)]
 
     def completed_line(self):
         for i, line in enumerate(self.board):
@@ -33,13 +33,13 @@ class Board():
 
     def clear_line(self, index):
         del self.board[index]
-        self.board.insert(0, ['.' for _ in range(10)])
+        self.board.insert(0, ['.' for _ in range(self.max_width)])
 
     def drop(self, piece, offset):
         last_level = self.max_height - piece.height + 1
         for level in range(last_level):
             for i in range(piece.height):
-                for j in range(piece.width):                    
+                for j in range(piece.width):
                     if self.board[level+i][offset+j] == "#" and piece.piece[i][j] == "#":
                         return level - 1
         return last_level - 1
@@ -58,20 +58,19 @@ class Board():
 def find_best_position(board, piece):
     result = []
     for rotation in range(4):
-        for offset in range(board.max_width - piece.width + 1):        
+        for offset in range(board.max_width - piece.width + 1):
             level = board.drop(piece, offset)
-            blocks = sum([b.count('#') for b in board.board[level:level + piece.height]])
+            blocks = sum(b.count('#') for b in board.board[level:level + piece.height])
             result.append([blocks, rotation, offset, level])
         piece.rotate()
 
-    result = list(filter(lambda x: x[0] == max(result, key = lambda x: x[0])[0], result))
-    result = list(filter(lambda x: x[1] == min(result, key = lambda x: x[1])[1], result))
-    result = list(filter(lambda x: x[2] == min(result, key = lambda x: x[2])[2], result))[0]
-    return result
-
+    for i, fn in enumerate([max, min, min]):
+        key = fn(result, key=lambda x: x[i])[i]
+        result = [x for x in result if x[i] == key]
+    return result[0]
 
 def tetrisGame(pieces):
-    board = Board()
+    board = Board(10, 20)
     score = 0
     for p in pieces:
         piece = Piece(p)
