@@ -20,6 +20,7 @@ class Piece():
         if isinstance(self, other.__class__):
             return self.__dict__ == other.__dict__
         return False
+        
     # Debugging purposes
     def __str__(self):
        return '\n'.join(''.join(line) for line in self.piece)
