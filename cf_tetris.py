@@ -20,7 +20,7 @@ class Piece():
         if isinstance(self, other.__class__):
             return self.__dict__ == other.__dict__
         return False
-        
+
     # Debugging purposes
     def __str__(self):
        return '\n'.join(''.join(line) for line in self.piece)
@@ -58,7 +58,12 @@ class Board():
 
     # Debugging purposes
     def __str__(self):
-       return '\n'.join(''.join(line) for line in self.board)
+       return '-' * self.max_width  + '\n' + \
+              '\n'.join(''.join(line) for line in self.board) + '\n' + \
+              '-' * self.max_width + '\n' + \
+              ''.join([str(i) for i in range(self.max_width)]) + '\n' + \
+              '-' * self.max_width
+
 
 def find_best_position(board, piece):
     result = []
