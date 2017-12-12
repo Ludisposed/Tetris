@@ -5,7 +5,7 @@ class Tetris():
     WIDTH = 300
     HEIGHT = 500
 
-    def __new__(self):
+    def __init__(self):
         self.level = 1
         self.score = 0
         self.speed = 500
@@ -23,16 +23,24 @@ class Tetris():
         self.canvas = Canvas(self.root, 
                              width = Tetris.WIDTH, 
                              height = Tetris.HEIGHT)
-        self.canvas.pack()
-
+        
         self.root.bind("<Key>", self.handle_events)
+        self.canvas.pack()
         self.root.mainloop()
 
     def start_game(self):
         pass
 
     def handle_events(self, event):
-        pass
+        if repr(event.char) == "a":
+          #go left
+          pass
+        elif repr(event.char) == "d":
+          #go right
+          pass
+        elif repr(event.char) == "s":
+          #rotate
+          pass
 
 class Piece():
     BOX_SIZE = 20
@@ -74,4 +82,4 @@ class Piece():
         self.piece = [row[::-1] for row in zip(*self.piece)]
 
 if __name__ == '__main__':
-    game = Tetris()    
+    game = Tetris()   
