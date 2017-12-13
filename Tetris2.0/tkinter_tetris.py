@@ -29,11 +29,11 @@ class Tetris():
         
         self.root.bind("<Key>", self.call_back)
         self.canvas.pack()
-        self.root.mainloop()
 
     def start(self):
         self.current_piece = Piece(self.canvas)
         self.canvas.update()
+        self.root.mainloop()
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
@@ -80,9 +80,9 @@ class Piece():
     def drop_line(self):
         pass
 
-    def can_move(self, position):
+    def can_move(self, box, new_pos):
         '''Check if box can move (x, y) boxes.'''
-        x, y = position
+        x, y = new_pos
         x = x * Piece.BOX_SIZE
         y = y * Piece.BOX_SIZE
         x_left, y_up, x_right, y_down = self.canvas.coords(box)
@@ -101,23 +101,20 @@ class Piece():
         pivot = boxes.pop(2)
 
         def pivot_box(box):
-            '''Return (x, y) boxes needed to rotate a box around the pivot.'''
             box_coords = self.canvas.coords(box)
             pivot_coords = self.canvas.coords(pivot)
             x_diff = box_coords[0] - pivot_coords[0]
             y_diff = box_coords[1] - pivot_coords[1]
-            x_pivot = (- x_diff - y_diff) / self.BOX_SIZE
+            x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
             y_pivot = (x_diff - y_diff) / self.BOX_SIZE
             return (x_pivot, y_pivot)
 
         if all(self.can_move(box, pivot_box(box)) for box in boxes):
             for box in boxes:
-                x_move, y_move = get_move_coords(box)
+                x_move, y_move = pivot_box(box)
                 self.canvas.move(box, 
                                  x_move * self.BOX_SIZE, 
                                  y_move * self.BOX_SIZE)
-
-        return True
         
 
 if __name__ == '__main__':
