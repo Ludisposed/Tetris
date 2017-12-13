@@ -37,9 +37,9 @@ class Tetris():
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
-            pass
+            self.current_piece.move((-1, 0))
         elif event.char in ["d", "\uf703"]:
-            pass
+            self.current_piece.move((1, 0))
         elif event.char in ["s", "\uf701"]:
             self.current_piece.rotate()
 
@@ -72,7 +72,12 @@ class Piece():
         return boxes
 
     def move(self, direction):
-        pass
+        x, y = direction
+        if all(self.can_move(box, direction) for box in self.boxes):
+            for box in self.boxes: 
+                self.canvas.move(box,
+                                 x * Piece.BOX_SIZE,
+                                 y * Piece.BOX_SIZE)
 
     def hard_drop(self):
         pass
@@ -93,6 +98,9 @@ class Piece():
             return False
         if x_right + x > Tetris.WIDTH:
             return False
+
+        # TDOD
+        # Check for overlapping pieces
 
         return True
 
