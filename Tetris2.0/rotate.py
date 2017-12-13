@@ -3,43 +3,44 @@ from random import randint, choice
 
 
 class Piece():
-    PIECES = (((0, 0), (1, 0), (0, 1), (1, 1)),  # square
-              ((0, 0), (1, 0), (2, 0), (3, 0)),  # line
-              ((2, 0), (0, 1), (1, 1), (2, 1)),  # right el
-              ((0, 0), (0, 1), (1, 1), (2, 1)),  # left el
-              ((0, 1), (1, 1), (1, 0), (2, 0)),  # right wedge
-              ((0, 0), (1, 0), (1, 1), (2, 1)),  # left wedge
-              ((1, 0), (0, 1), (1, 1), (2, 1)))  # symmetrical wedge
-
-    def __init__(self):
-        self.positions = choice(Piece.PIECES)
+    def __init__(self, piece):
+        self.piece = piece
         self.random_rotate()
-        self.boxes = self.add_boxes()
 
-    def add_boxes(self):
-        boxes = []
-        for pos in self.positions:
-            x, y = pos
-            boxes.append(self.board.create_rectangle(x * self.width + start_place,
-                                                           y * self.height + start_place,
-                                                           (x + 1) * self.width + start_place,
-                                                           (y + 1) *  self.height + start_place,
-                                                           fill="blue"))
-        return boxes
+    @property
+    def width(self):
+        return len(self.piece[0])
 
-    def remove_boxes(self):
-        for piece in self.pieces:
-            self.board.delete(piece)
-        self.pieces = []
+    @property
+    def height(self):
+        return len(self.piece)
 
     def rotate(self, times=1):
         for i in range(times % 4):
-            self.piece = [row[::-1] for row in zip(*self.positions)]
+            self.piece = [row[::-1] for row in zip(*self.piece)]
     
     def random_rotate(self):
         self.rotate(randint(0,3))
+    
+    #get coordinates of '#' which will used in draw on canvas
+    '''
+    such as
+        ##
+         ##
+        [('#','#','.'),('.','#','#')]
+    coordinates for # will be (0,0),(0,1),(1,1),(1,2)
+    but the right is          (0,0),(1,0),(1,1),(2,1)
+    SO we have to switch the `x` and `y`
+    '''
+    def positions(self):
+        return [(j,i) for i in range(self.height) for j in range(self.width) if self.piece[i][j] == "#"]
+    
+    # Debugging purposes
+    def __str__(self):
+       return '\n'.join(''.join(line) for line in self.piece)
 
 class Game:
+
     def __init__(self):
         root = Tk()
 
@@ -48,26 +49,39 @@ class Game:
 
         self.width, self.height = 50, 50
 
-        self.piece = Piece()
+        self.piece = Piece([('#','#','.'),('.','#','#')])
+        self.pieces = []
+        self.add_piece(0)
 
         root.bind('<Key>', self.callback)
         mainloop()
 
+    def add_piece(self, start_place):
+        positions = self.piece.positions()
+        self.pieces = []
+        for pos in positions:
+          x,y = pos
+          self.pieces.append(self.board.create_rectangle(x * self.width + start_place, y * self.height + start_place, \
+                       (x + 1) * self.width + start_place, (y + 1) *  self.height + start_place, fill="blue"))
+       
+
+    def remove_piece(self):
+        for piece in self.pieces:
+            self.board.delete(piece)
+        self.pieces = []
+
     def callback(self, event):
-        # print(event.char)
+
+        print(event.char)
         if event.char in ["a", "\uf702"]:
-            self.move_piece(-10)
+          print("go left")
         elif event.char in ["d", "\uf703"]:
-            self.move_piece(10)
+          print("go right")
         elif event.char in ["s", "\uf701"]:
-            self.piece.rotate()
+          print("rotate")
+          self.piece.rotate()
+          self.remove_piece()
+          self.add_piece(0)
 
 if __name__ == "__main__":
     game = Game()
-
-
-
-
-
-
-
