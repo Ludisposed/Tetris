@@ -31,8 +31,10 @@ class Tetris():
         self.canvas.pack()
 
     def start(self):
-        self.current_piece = Piece(self.canvas)
+        self.current_piece = Piece(self.canvas, self.root)
         self.canvas.update()
+        self.root.after(1000,None)
+        self.current_piece.drop_line()
         self.root.mainloop()
 
     def call_back(self, event):
@@ -54,9 +56,10 @@ class Piece():
               ((0, 0), (1, 0), (1, 1), (2, 1)),     # Left Z
               ((1, 0), (0, 1), (1, 1), (2, 1)))     # T
     
-    def __init__(self, canvas):
+    def __init__(self, canvas, root):
         self.piece = choice(Piece.PIECES)
         self.canvas = canvas
+        self.root = root
         self.boxes = self.create_boxes()
 
     def create_boxes(self):
@@ -78,12 +81,15 @@ class Piece():
                 self.canvas.move(box,
                                  x * Piece.BOX_SIZE,
                                  y * Piece.BOX_SIZE)
+            return True
+        return False
 
     def hard_drop(self):
         pass
 
     def drop_line(self):
-        pass
+        if self.move((0,1)):
+            self.root.after(2000, self.drop_line)
 
     def can_move(self, box, new_pos):
         '''Check if box can move (x, y) boxes.'''
