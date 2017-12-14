@@ -32,41 +32,13 @@ class Board():
                 x * Board.BOX_SIZE + Board.BOX_SIZE + Board.START_POINT,
                 y * Board.BOX_SIZE + Board.BOX_SIZE)
 
+
     @classmethod
     def movement(self, x, y):
         return (x * Board.BOX_SIZE,
                 y * Board.BOX_SIZE)
 
-    @classmethod
-    def rotate(self, coords, times = 1):
-        points = Board.coords_to_points(coords)
-        for _ in range(times % 4):
-            print(points)
-            rotated_points = []
-            min_y = min(points, key=lambda a:a[1])[1]
-            min_x = min(points, key=lambda a:a[0])[0]
-            points = [(point[0] - min_x, point[1] - min_y) for point in points]
-            max_y = max(points, key=lambda a:a[1])[1]
-            for point in points:
-                x,y = point
-                tmp = y
-                y = x + min_y
-                x = max_y - tmp + min_x
-                rotated_points.append((x,y))
-
-            points = rotated_points
-            print(points)
-        return Board.points_to_coords(points)
-
-    @classmethod
-    def coords_to_points(self, coords):
-        return [(coord[0] // Board.BOX_SIZE, coord[1] // Board.BOX_SIZE) for coord in coords]
-
-    @classmethod
-    def points_to_coords(self, points):
-        return [(point[0] * Board.BOX_SIZE, point[1] * Board.BOX_SIZE) for point in points]
-
-
+    
 
 
 
@@ -158,47 +130,28 @@ class Piece():
                                  moved_y)
             return True
         return False
-    
+
+
+
     def rotate(self):
-        print([self.canvas.coords(box)[:2] for box in self.boxes])
-        coords = Board.rotate([self.canvas.coords(box)[:2] for box in self.boxes])
-        print(coords)
-        directions = [((coords[i][0] - self.canvas.coords(self.boxes[i])[0]) // Board.BOX_SIZE, \
-                       (coords[i][1] - self.canvas.coords(self.boxes[i])[1]) // Board.BOX_SIZE) \
-                      for i in range(len(self.boxes))]
-        print(directions)
-        if all(Board.can_move(self.canvas.coords(self.boxes[i]), directions[i], []) \
-               for i in range(len(self.boxes))):
-            
-            for i in range(len(self.boxes)):
-                x_move, y_move = directions[i]
-                self.canvas.move(self.boxes[i], 
+        boxes = self.boxes[:]
+        pivot = boxes.pop(2)
+
+        def pivot_box(box):
+            box_coords = self.canvas.coords(box)
+            pivot_coords = self.canvas.coords(pivot)
+            x_diff = box_coords[0] - pivot_coords[0]
+            y_diff = box_coords[1] - pivot_coords[1]
+            x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
+            y_pivot = (x_diff - y_diff) / self.BOX_SIZE
+            return (x_pivot, y_pivot)
+
+        if all(Board.can_move(self.canvas.coords(box), pivot_box(box),[]) for box in boxes):
+            for box in boxes:
+                x_move, y_move = pivot_box(box)
+                self.canvas.move(box, 
                                  x_move * self.BOX_SIZE, 
                                  y_move * self.BOX_SIZE)
-
-
-
-
-
-    # def rotate(self):
-    #     boxes = self.boxes[:]
-    #     pivot = boxes.pop(2)
-
-    #     def pivot_box(box):
-    #         box_coords = self.canvas.coords(box)
-    #         pivot_coords = self.canvas.coords(pivot)
-    #         x_diff = box_coords[0] - pivot_coords[0]
-    #         y_diff = box_coords[1] - pivot_coords[1]
-    #         x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
-    #         y_pivot = (x_diff - y_diff) / self.BOX_SIZE
-    #         return (x_pivot, y_pivot)
-
-    #     if all(self.can_move(box, pivot_box(box)) for box in boxes):
-    #         for box in boxes:
-    #             x_move, y_move = pivot_box(box)
-    #             self.canvas.move(box, 
-    #                              x_move * self.BOX_SIZE, 
-    #                              y_move * self.BOX_SIZE)
         
 
 if __name__ == '__main__':
