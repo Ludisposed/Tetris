@@ -1,8 +1,54 @@
 from tkinter import Canvas, Label, Tk, StringVar
 from random import choice
 
+
 class Board():
-    pass
+    WIDTH = 300
+    HEIGHT = 500
+    BOX_SIZE = 20
+    START_POINT = WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
+
+    @classmethod
+    def can_move(self, box_coords, new_pos, coords_occupied):
+        x, y = new_pos
+        x = x * Board.BOX_SIZE
+        y = y * Board.BOX_SIZE
+        x_left, y_up, x_right, y_down = box_coords
+
+        if y_down + y > Board.HEIGHT:
+            return False
+        if x_left + x < 0:
+            return False
+        if x_right + x > Board.WIDTH:
+            return False
+        if (x_left + x, y_up + y) in coords_occupied:
+            return False
+        return True
+
+    @classmethod
+    def new_piece_coord(self, x, y):
+        return (x * BOX_SIZE + START_POINT,
+               y * BOX_SIZE,
+               x * BOX_SIZE + BOX_SIZE + START_POINT,
+               y * BOX_SIZE + BOX_SIZE)
+
+    @classmethod
+    def movement(self, x, y):
+        return (x * BOX_SIZE,
+               y * BOX_SIZE)
+
+    @classmethod
+    def rotate(self, coords):
+        max_y = max(coords, key=lambda a:a[1])[1]
+        rotated_coods = []
+        for coord in coords:
+            x,y = coord
+            tmp = y
+            y = x
+            x = max_y - tmp
+            rotated_coods.append((x,y))
+        return rotated_coods
+
 
 class Tetris():
     WIDTH = 300
@@ -12,6 +58,7 @@ class Tetris():
         self.level = 1
         self.score = 0
         self.speed = 500
+        self.fast_speed = 100
         
         self.root = Tk()
         self.root.title('Tetris')
@@ -33,9 +80,16 @@ class Tetris():
     def start(self):
         self.current_piece = Piece(self.canvas, self.root)
         self.canvas.update()
-        self.root.after(1000,None)
+        self.root.after(500,None)
         self.current_piece.drop_line()
         self.root.mainloop()
+
+    def hard_drop(self):
+        pass
+
+    def drop(self, speed):
+        if self.move((0,1)):
+            self.root.after(500, self.drop_line)
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
@@ -48,13 +102,13 @@ class Tetris():
 class Piece():
     BOX_SIZE = 20
     START_POINT = Tetris.WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
-    PIECES = (((0, 0), (1, 0), (0, 1), (1, 1)),     # Square
-              ((0, 0), (1, 0), (2, 0), (3, 0)),     # Line
-              ((2, 0), (0, 1), (1, 1), (2, 1)),     # Right L
-              ((0, 0), (0, 1), (1, 1), (2, 1)),     # Left L
-              ((0, 1), (1, 1), (1, 0), (2, 0)),     # Right Z
-              ((0, 0), (1, 0), (1, 1), (2, 1)),     # Left Z
-              ((1, 0), (0, 1), (1, 1), (2, 1)))     # T
+    PIECES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
+              [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
+              [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
+              [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
+              [(0, 1), (1, 1), (1, 0), (2, 0)],     # Right Z
+              [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
+              [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
     
     def __init__(self, canvas, root):
         self.piece = choice(Piece.PIECES)
@@ -84,32 +138,6 @@ class Piece():
             return True
         return False
 
-    def hard_drop(self):
-        pass
-
-    def drop_line(self):
-        if self.move((0,1)):
-            self.root.after(2000, self.drop_line)
-
-    def can_move(self, box, new_pos):
-        '''Check if box can move (x, y) boxes.'''
-        x, y = new_pos
-        x = x * Piece.BOX_SIZE
-        y = y * Piece.BOX_SIZE
-        x_left, y_up, x_right, y_down = self.canvas.coords(box)
-
-        if y_down + y > Tetris.HEIGHT:
-            return False
-        if x_left + x < 0:
-            return False
-        if x_right + x > Tetris.WIDTH:
-            return False
-
-        # TDOD
-        # Check for overlapping pieces
-
-        return True
-
     def rotate(self):
         boxes = self.boxes[:]
         pivot = boxes.pop(2)
@@ -134,3 +162,4 @@ class Piece():
 if __name__ == '__main__':
     game = Tetris()
     game.start()
+
