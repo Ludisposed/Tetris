@@ -43,13 +43,15 @@ class Board():
         for _ in range(times % 4):
             print(points)
             rotated_points = []
-            max_y = max(points, key=lambda a:a[1])[1]
             min_y = min(points, key=lambda a:a[1])[1]
+            min_x = min(points, key=lambda a:a[0])[0]
+            points = [(point[0] - min_x, point[1] - min_y) for point in points]
+            max_y = max(points, key=lambda a:a[1])[1]
             for point in points:
                 x,y = point
                 tmp = y
-                y = x
-                x = max_y - tmp + min_y
+                y = x + min_y
+                x = max_y - tmp + min_x
                 rotated_points.append((x,y))
 
             points = rotated_points
