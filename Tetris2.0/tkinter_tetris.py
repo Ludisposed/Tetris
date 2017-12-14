@@ -1,5 +1,5 @@
 from tkinter import Canvas, Label, Tk, StringVar
-from random import choice
+from random import choice, randint
 
 
 class Board():
@@ -15,6 +15,8 @@ class Board():
         y = y * Board.BOX_SIZE
         x_left, y_up, x_right, y_down = box_coords
 
+        print(x_left + x, x_right + x, y_down + y)
+
         if y_down + y > Board.HEIGHT:
             return False
         if x_left + x < 0:
@@ -27,27 +29,40 @@ class Board():
 
     @classmethod
     def new_piece_coord(self, x, y):
-        return (x * BOX_SIZE + START_POINT,
-               y * BOX_SIZE,
-               x * BOX_SIZE + BOX_SIZE + START_POINT,
-               y * BOX_SIZE + BOX_SIZE)
+        return (x * Board.BOX_SIZE + Board.START_POINT,
+                y * Board.BOX_SIZE,
+                x * Board.BOX_SIZE + Board.BOX_SIZE + Board.START_POINT,
+                y * Board.BOX_SIZE + Board.BOX_SIZE)
 
     @classmethod
     def movement(self, x, y):
-        return (x * BOX_SIZE,
-               y * BOX_SIZE)
+        return (x * Board.BOX_SIZE,
+                y * Board.BOX_SIZE)
 
     @classmethod
-    def rotate(self, coords):
-        max_y = max(coords, key=lambda a:a[1])[1]
-        rotated_coods = []
-        for coord in coords:
-            x,y = coord
-            tmp = y
-            y = x
-            x = max_y - tmp
-            rotated_coods.append((x,y))
-        return rotated_coods
+    def rotate(self, coords, times = 1):
+        points = Board.coords_to_points(coords)
+        for _ in range(times % 4):
+            rotated_points = []
+            max_y = max(points, key=lambda a:a[1])[1]
+            for point in points:
+                x,y = point
+                tmp = y
+                y = x
+                x = max_y - tmp
+                rotated_points.append((x,y))
+            points = rotated_points
+        return Board.points_to_coords(points)
+
+    @classmethod
+    def coords_to_points(self, coords):
+        return [(coord[0] // Board.BOX_SIZE, coord[1] // Board.BOX_SIZE) for coord in coords]
+
+    @classmethod
+    def points_to_coords(self, points):
+        return [(point[0] * Board.BOX_SIZE, point[1] * Board.BOX_SIZE) for point in points]
+
+
 
 
 class Tetris():
@@ -78,18 +93,18 @@ class Tetris():
         self.canvas.pack()
 
     def start(self):
-        self.current_piece = Piece(self.canvas, self.root)
+        self.current_piece = Piece(self.canvas)
         self.canvas.update()
         self.root.after(500,None)
-        self.current_piece.drop_line()
+        self.drop()
         self.root.mainloop()
 
     def hard_drop(self):
         pass
 
-    def drop(self, speed):
-        if self.move((0,1)):
-            self.root.after(500, self.drop_line)
+    def drop(self):
+        if self.current_piece.move((0,1)):
+            self.root.after(500, self.drop)
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
@@ -110,53 +125,74 @@ class Piece():
               [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
               [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
     
-    def __init__(self, canvas, root):
-        self.piece = choice(Piece.PIECES)
+    def __init__(self, canvas):
         self.canvas = canvas
-        self.root = root
         self.boxes = self.create_boxes()
 
     def create_boxes(self):
         boxes = []
-        for point in self.piece:
-            x, y = point
-            box = self.canvas.create_rectangle(x * Piece.BOX_SIZE + Piece.START_POINT,
-                                               y * Piece.BOX_SIZE,
-                                               x * Piece.BOX_SIZE + Piece.BOX_SIZE + Piece.START_POINT,
-                                               y * Piece.BOX_SIZE + Piece.BOX_SIZE,
+        coords = choice(Piece.PIECES)
+        for coord in coords:
+            x, y = coord
+            x_left, y_up, x_right, y_down = Board.new_piece_coord(x,y)
+            box = self.canvas.create_rectangle(x_left,
+                                               y_up,
+                                               x_right,
+                                               y_down,
                                                fill="blue")
             boxes.append(box)
         return boxes
 
     def move(self, direction):
         x, y = direction
-        if all(self.can_move(box, direction) for box in self.boxes):
+        if all(Board.can_move(self.canvas.coords(box), direction, []) for box in self.boxes):
             for box in self.boxes: 
+                moved_x, moved_y = Board.movement(x,y)
                 self.canvas.move(box,
-                                 x * Piece.BOX_SIZE,
-                                 y * Piece.BOX_SIZE)
+                                 moved_x,
+                                 moved_y)
             return True
         return False
-
+    
     def rotate(self):
-        boxes = self.boxes[:]
-        pivot = boxes.pop(2)
-
-        def pivot_box(box):
-            box_coords = self.canvas.coords(box)
-            pivot_coords = self.canvas.coords(pivot)
-            x_diff = box_coords[0] - pivot_coords[0]
-            y_diff = box_coords[1] - pivot_coords[1]
-            x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
-            y_pivot = (x_diff - y_diff) / self.BOX_SIZE
-            return (x_pivot, y_pivot)
-
-        if all(self.can_move(box, pivot_box(box)) for box in boxes):
-            for box in boxes:
-                x_move, y_move = pivot_box(box)
-                self.canvas.move(box, 
+        coords = Board.rotate([self.canvas.coords(box)[:2] for box in self.boxes])
+        print(coords)
+        directions = [((coords[i][0] - self.canvas.coords(self.boxes[i])[0]) // Board.BOX_SIZE, \
+                       (coords[i][1] - self.canvas.coords(self.boxes[i])[1]) // Board.BOX_SIZE) \
+                      for i in range(len(self.boxes))]
+        print(directions)
+        if all(Board.can_move(self.canvas.coords(self.boxes[i]), directions[i], []) \
+               for i in range(len(self.boxes))):
+            print(rotate)
+            for i in range(len(self.boxes)):
+                x_move, y_move = directions[i]
+                self.canvas.move(self.boxes[i], 
                                  x_move * self.BOX_SIZE, 
                                  y_move * self.BOX_SIZE)
+
+
+
+
+
+    # def rotate(self):
+    #     boxes = self.boxes[:]
+    #     pivot = boxes.pop(2)
+
+    #     def pivot_box(box):
+    #         box_coords = self.canvas.coords(box)
+    #         pivot_coords = self.canvas.coords(pivot)
+    #         x_diff = box_coords[0] - pivot_coords[0]
+    #         y_diff = box_coords[1] - pivot_coords[1]
+    #         x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
+    #         y_pivot = (x_diff - y_diff) / self.BOX_SIZE
+    #         return (x_pivot, y_pivot)
+
+    #     if all(self.can_move(box, pivot_box(box)) for box in boxes):
+    #         for box in boxes:
+    #             x_move, y_move = pivot_box(box)
+    #             self.canvas.move(box, 
+    #                              x_move * self.BOX_SIZE, 
+    #                              y_move * self.BOX_SIZE)
         
 
 if __name__ == '__main__':
