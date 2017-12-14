@@ -108,7 +108,7 @@ class Piece():
 
     def create_boxes(self):
         boxes = []
-        coords = choice(Piece.PIECES)
+        coords = [(2, 0), (0, 1), (1, 1), (2, 1)]
         for coord in coords:
             x, y = coord
             x_left, y_up, x_right, y_down = Board.new_piece_coord(x,y)
@@ -135,17 +135,20 @@ class Piece():
 
     def rotate(self):
         boxes = self.boxes[:]
-        pivot = boxes.pop(2)
+
+        coords = [self.canvas.coords(box)[:2] for box in self.boxes]
+        coords_x = [coord[0] for coord in coords]
+        coords_y = [coord[1] for coord in coords]
+        mid_x = (max(coords_x) + min(coords_x)) / 2
+        mid_y = (max(coords_y) + min(coords_y)) / 2
 
         def pivot_box(box):
             box_coords = self.canvas.coords(box)
-            pivot_coords = self.canvas.coords(pivot)
-            x_diff = box_coords[0] - pivot_coords[0]
-            y_diff = box_coords[1] - pivot_coords[1]
+            x_diff = box_coords[0] - mid_x
+            y_diff = box_coords[1] - mid_y
             x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
             y_pivot = (x_diff - y_diff) / self.BOX_SIZE
             return (x_pivot, y_pivot)
-
         if all(Board.can_move(self.canvas.coords(box), pivot_box(box),[]) for box in boxes):
             for box in boxes:
                 x_move, y_move = pivot_box(box)
