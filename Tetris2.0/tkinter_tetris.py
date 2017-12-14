@@ -15,8 +15,6 @@ class Board():
         y = y * Board.BOX_SIZE
         x_left, y_up, x_right, y_down = box_coords
 
-        print(x_left + x, x_right + x, y_down + y)
-
         if y_down + y > Board.HEIGHT:
             return False
         if x_left + x < 0:
@@ -43,15 +41,19 @@ class Board():
     def rotate(self, coords, times = 1):
         points = Board.coords_to_points(coords)
         for _ in range(times % 4):
+            print(points)
             rotated_points = []
             max_y = max(points, key=lambda a:a[1])[1]
+            min_y = min(points, key=lambda a:a[1])[1]
             for point in points:
                 x,y = point
                 tmp = y
                 y = x
-                x = max_y - tmp
+                x = max_y - tmp + min_y
                 rotated_points.append((x,y))
+
             points = rotated_points
+            print(points)
         return Board.points_to_coords(points)
 
     @classmethod
@@ -61,6 +63,7 @@ class Board():
     @classmethod
     def points_to_coords(self, points):
         return [(point[0] * Board.BOX_SIZE, point[1] * Board.BOX_SIZE) for point in points]
+
 
 
 
@@ -155,6 +158,7 @@ class Piece():
         return False
     
     def rotate(self):
+        print([self.canvas.coords(box)[:2] for box in self.boxes])
         coords = Board.rotate([self.canvas.coords(box)[:2] for box in self.boxes])
         print(coords)
         directions = [((coords[i][0] - self.canvas.coords(self.boxes[i])[0]) // Board.BOX_SIZE, \
@@ -163,7 +167,7 @@ class Piece():
         print(directions)
         if all(Board.can_move(self.canvas.coords(self.boxes[i]), directions[i], []) \
                for i in range(len(self.boxes))):
-            print(rotate)
+            
             for i in range(len(self.boxes)):
                 x_move, y_move = directions[i]
                 self.canvas.move(self.boxes[i], 
