@@ -44,8 +44,9 @@ class Tetris():
         pass
 
     def drop(self):
-        if self.current_piece.move((0,1)):
-            self.root.after(500, self.drop)
+        if not self.current_piece.move((0,1)):
+            self.current_piece = Piece(self.canvas)
+        self.root.after(500, self.drop)
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
