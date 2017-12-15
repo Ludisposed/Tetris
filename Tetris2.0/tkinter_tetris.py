@@ -13,7 +13,7 @@ class Tetris():
     def __init__(self):
         self.level = 1
         self.score = 0
-        self.speed = 500
+        self.speed = 250
         
         self.root = Tk()
         self.root.title('Tetris')
@@ -82,15 +82,19 @@ class Tetris():
         
         for y in y_coords_piece:
             if all( (x, y) in all_boxes_coords for x in range(10, self.WIDTH - 10, Piece.BOX_SIZE) ):
+                # Clear line
                 boxes_to_delete = [box
                                    for box in self.canvas.find_all()
                                    if self.canvas.coords(box)[3] == y]
-                
                 for box in boxes_to_delete:
                     self.canvas.delete(box)
-                
-                # Let above lines drop
-        
+
+                # Drop boxes
+                boxes_to_drop = [box
+                                 for box in self.canvas.find_all()
+                                 if self.canvas.coords(box)[3] < y]
+                for box in boxes_to_drop:
+                    self.canvas.move(box, 0, Piece.BOX_SIZE)
 
 class Piece():
     BOX_SIZE = 20
