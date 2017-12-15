@@ -135,9 +135,15 @@ class Piece():
             return False
         if x_right + x > Tetris.WIDTH:
             return False
-        #print(self.canvas.find_overlapping(x_left + x, y_up + y, x_right + x, y_down + y))
-        # if len(self.canvas.find_overlapping(x_left + x, y_up + y, x_right + x, y_down + y)) > 0:
-        #     return False
+
+        # Returns False if moving box (x, y) would overlap another box
+        overlap = set(self.canvas.find_overlapping((x_left + x_right) / 2 + x, 
+                                                   (y_up + y_down) / 2 + y, 
+                                                   (x_left + x_right) / 2 + x,
+                                                   (y_up + y_down) / 2 + y))
+        other_items = set(self.canvas.find_all()) - set(self.boxes)
+        if overlap & other_items:
+            return False
         return True
 
     
@@ -166,10 +172,6 @@ class Piece():
         directions = [(new_original[0] - coord[1] - coord[0], \
                       new_original[1] + coord[0] - coord[1]) for coord in new_coords]
         return self.__movement(coords, directions)
-
-
-    
-        
 
 if __name__ == '__main__':
     game = Tetris()
