@@ -32,6 +32,9 @@ class Tetris():
         self.root.bind("<Key>", self.call_back)
         self.canvas.pack()
 
+        self.play_again_btn = None
+        self.quit_btn = None
+
     def start(self):
         self.current_piece = Piece(self.canvas)
         self.canvas.update()
@@ -80,16 +83,21 @@ class Tetris():
             self.current_piece.rotate()
 
     def play_again(self):
-        print("play again")
+        for box in self.canvas.find_all():
+            self.canvas.delete(box)
+        self.play_again_btn.destroy()
+        self.quit_btn.destroy()
+
+        self.start()
 
     def quit(self):
         self.root.quit()
 
     def game_over(self):
-        play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
-        quit_btn = Button(self.root, text="Quit", command=self.quit)
-        play_again_btn.pack()
-        quit_btn.pack()
+        self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
+        self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
+        self.play_again_btn.pack()
+        self.quit_btn.pack()
 
     def completed_lines(self):
         y_coords_piece = [self.canvas.coords(box)[3] for box in self.current_piece.boxes]
