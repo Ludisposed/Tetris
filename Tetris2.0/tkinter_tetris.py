@@ -71,6 +71,20 @@ class Piece():
         self.canvas = canvas
         self.boxes = self.create_boxes()
         self.rotate(randint(0,3))
+        self.initboard()
+
+    def initboard(self):
+        left = self.START_POINT - self.BOX_SIZE
+        right = self.START_POINT + self.BOX_SIZE
+        self.canvas.create_line(self.START_POINT, 0, self.START_POINT, Tetris.HEIGHT, fill="yellow")
+        
+        while left > 0:
+            self.canvas.create_line(left, 0, left, Tetris.HEIGHT, fill="red")
+            left -= self.BOX_SIZE
+
+        while right < Tetris.WIDTH:
+            self.canvas.create_line(right, 0, right, Tetris.HEIGHT, fill="red")
+            right += self.BOX_SIZE
 
     def create_boxes(self):
         boxes = []
@@ -121,8 +135,9 @@ class Piece():
             return False
         if x_right + x > Tetris.WIDTH:
             return False
-        if len(self.canvas.find_overlapping(x_left + x, y_up + y, x_right + x, y_down + y)) > 4:
-            return False
+        #print(self.canvas.find_overlapping(x_left + x, y_up + y, x_right + x, y_down + y))
+        # if len(self.canvas.find_overlapping(x_left + x, y_up + y, x_right + x, y_down + y)) > 0:
+        #     return False
         return True
 
     
@@ -140,22 +155,18 @@ class Piece():
         
         return None
 
-    
     def __rotate_movement(self, coords):
-        coords_x = [coord[0] for coord in coords]
-        coords_y = [coord[1] for coord in coords]
-        mid_x = (max(coords_x) + min(coords_x)) / 2
-        mid_y = (max(coords_y) + min(coords_y)) / 2
+        min_x = min(coords, key=lambda x: x[0])[0]
+        min_y = min(coords, key=lambda x: x[1])[1]
+        new_coords = [((coord[0] - min_x) / self.BOX_SIZE , (coord[1] - min_y) / self.BOX_SIZE ) for coord in coords]
+        
+        max_x = max(new_coords, key=lambda x:x[0])[0]
+        new_original = (max_x, 0)
 
-        def pivot_box(coord):
-            x_diff = coord[0] - mid_x
-            y_diff = coord[1] - mid_y
-            x_pivot = (-x_diff - y_diff) / self.BOX_SIZE
-            y_pivot = (x_diff - y_diff) / self.BOX_SIZE
-            return (x_pivot, y_pivot)
-
-        directions = [pivot_box(coord) for coord in coords]
+        directions = [(new_original[0] - coord[1] - coord[0], \
+                      new_original[1] + coord[0] - coord[1]) for coord in new_coords]
         return self.__movement(coords, directions)
+
 
     
         
