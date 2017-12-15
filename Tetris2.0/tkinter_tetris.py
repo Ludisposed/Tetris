@@ -73,18 +73,23 @@ class Tetris():
 
     def game_over(self):
         self.root.quit()
-        # Make buttons for new game, see score etc...
-        # Too much GUI stuff :pddd
 
     def completed_lines(self):
         y_coords_piece = [self.canvas.coords(box)[3] for box in self.current_piece.boxes]
-        
-        # Get all the boxes on the same line
-        # Only have to check the lines in y direction
-        all_boxes_coords = [self.canvas.coords(box)
+        all_boxes_coords = [(self.canvas.coords(box)[0], self.canvas.coords(box)[3])
                             for box in self.canvas.find_all()
                             if self.canvas.coords(box)[3] in y_coords_piece]
-        print(all_boxes_coords)
+        
+        for y in y_coords_piece:
+            if all( (x, y) in all_boxes_coords for x in range(10, self.WIDTH - 10, Piece.BOX_SIZE) ):
+                boxes_to_delete = [box
+                                   for box in self.canvas.find_all()
+                                   if self.canvas.coords(box)[3] == y]
+                
+                for box in boxes_to_delete:
+                    self.canvas.delete(box)
+                
+                # Let above lines drop
         
 
 class Piece():
