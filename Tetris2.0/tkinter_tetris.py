@@ -1,4 +1,4 @@
-from tkinter import Canvas, Label, Tk, StringVar, Button
+from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
 
 
@@ -12,11 +12,22 @@ class Tetris():
     def __init__(self):
         self.level = 1
         self.score = 0
-        self.speed = 10
-        self.block_count = 0
-        
+
         self.root = Tk()
+        self.root.geometry("500x550") 
         self.root.title('Tetris')
+
+        
+
+        self.canvas = Canvas(self.root, 
+                             width = Tetris.WIDTH, 
+                             height = Tetris.HEIGHT)
+        self.next_piece = Canvas(self.root,
+                                 width = 60,
+                                 height = 60)
+        self.root.bind("<Key>", self.call_back)
+        self.canvas.pack(padx=5 , pady=0, side=LEFT)
+        self.next_piece.pack()
 
         self.status_var = StringVar()        
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")        
@@ -25,17 +36,20 @@ class Tetris():
                             font=("Helvetica", 10, "bold"))
         self.status.pack()
 
-        self.canvas = Canvas(self.root, 
-                             width = Tetris.WIDTH, 
-                             height = Tetris.HEIGHT)
-        
-        self.root.bind("<Key>", self.call_back)
-        self.canvas.pack()
-
         self.play_again_btn = None
         self.quit_btn = None
 
     def start(self):
+        self.next_piece.create_rectangle(0,
+                                               0,
+                                               40,
+                                               40,
+                                               fill="red")
+        self.level = 1
+        self.score = 0
+        self.speed = 100
+        self.block_count = 0
+
         self.current_piece = Piece(self.canvas)
         self.canvas.update()
         self.root.after(self.speed, None)
