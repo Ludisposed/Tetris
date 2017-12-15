@@ -5,7 +5,6 @@ from random import choice, randint
 class Board():
     pass
 
-
 class Tetris():
     WIDTH = 300
     HEIGHT = 500
@@ -14,6 +13,7 @@ class Tetris():
         self.level = 1
         self.score = 0
         self.speed = 250
+        self.block_count = 0
         
         self.root = Tk()
         self.root.title('Tetris')
@@ -43,7 +43,8 @@ class Tetris():
         pass
 
     def update_status(self):
-        pass
+        self.status_var.set(f"Level: {self.level}, Score: {self.score}")
+        self.status.update()
 
     def next_level(self):
         self.speed -= 25
@@ -61,6 +62,12 @@ class Tetris():
             # Check for game over(if new piece cannot be dropped)
             if not self.current_piece.move((0,1)):
                 self.game_over()
+
+            # Next level logic
+            self.block_count += 1
+            if self.block_count % 5 == 0:
+                self.next_level()
+                
         self.root.after(self.speed, self.drop)
 
     def call_back(self, event):
@@ -96,6 +103,10 @@ class Tetris():
                 for box in boxes_to_drop:
                     self.canvas.move(box, 0, Piece.BOX_SIZE)
 
+                self.score += 1
+                self.update_status()
+
+
 class Piece():
     BOX_SIZE = 20
     START_POINT = Tetris.WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
@@ -111,23 +122,6 @@ class Piece():
         self.canvas = canvas
         self.boxes = self.create_boxes()
         self.rotate(randint(1, 4))
-        # self.initboard()
-
-    def initboard(self):
-        pass
-        '''
-        left = self.START_POINT - self.BOX_SIZE
-        right = self.START_POINT + self.BOX_SIZE
-        self.canvas.create_line(self.START_POINT, 0, self.START_POINT, Tetris.HEIGHT, fill="yellow")
-
-        while left > 0:
-            self.canvas.create_line(left, 0, left, Tetris.HEIGHT, fill="red")
-            left -= self.BOX_SIZE
-
-        while right < Tetris.WIDTH:
-            self.canvas.create_line(right, 0, right, Tetris.HEIGHT, fill="red")
-            right += self.BOX_SIZE
-        '''
 
     def create_boxes(self):
         boxes = []
@@ -146,7 +140,7 @@ class Piece():
     def move(self, direction):
         coords = [self.canvas.coords(box) for box in self.boxes]
         movements = self.__movement(coords, [direction] * len(coords))
-        if movements:
+        if not movements is None:
             self.__move(movements)
             return True
         return False
