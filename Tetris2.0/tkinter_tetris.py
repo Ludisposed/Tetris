@@ -1,4 +1,4 @@
-from tkinter import Canvas, Label, Tk, StringVar
+from tkinter import Canvas, Label, Tk, StringVar, Button
 from random import choice, randint
 
 
@@ -12,7 +12,7 @@ class Tetris():
     def __init__(self):
         self.level = 1
         self.score = 0
-        self.speed = 250
+        self.speed = 10
         self.block_count = 0
         
         self.root = Tk()
@@ -62,6 +62,7 @@ class Tetris():
             # Check for game over(if new piece cannot be dropped)
             if not self.current_piece.move((0,1)):
                 self.game_over()
+                return 
 
             # Next level logic
             self.block_count += 1
@@ -78,8 +79,17 @@ class Tetris():
         elif event.char in ["s", "\uf701"]:
             self.current_piece.rotate()
 
-    def game_over(self):
+    def play_again(self):
+        print("play again")
+
+    def quit(self):
         self.root.quit()
+
+    def game_over(self):
+        play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
+        quit_btn = Button(self.root, text="Quit", command=self.quit)
+        play_again_btn.pack()
+        quit_btn.pack()
 
     def completed_lines(self):
         y_coords_piece = [self.canvas.coords(box)[3] for box in self.current_piece.boxes]
