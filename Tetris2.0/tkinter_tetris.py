@@ -14,7 +14,6 @@ class Tetris():
         self.level = 1
         self.score = 0
         self.speed = 500
-        self.fast_speed = 100
         
         self.root = Tk()
         self.root.title('Tetris')
@@ -36,17 +35,33 @@ class Tetris():
     def start(self):
         self.current_piece = Piece(self.canvas)
         self.canvas.update()
-        self.root.after(500,None)
+        self.root.after(self.speed, None)
         self.drop()
         self.root.mainloop()
 
     def hard_drop(self):
         pass
 
+    def update_status(self):
+        pass
+
+    def next_level(self):
+        self.speed -= 25
+        self.level += 1
+        self.update_status()
+
     def drop(self):
         if not self.current_piece.move((0,1)):
+            # Check for completed lines
+            self.completed_lines()
+
+            # Create a new piece
             self.current_piece = Piece(self.canvas)
-        self.root.after(500, self.drop)
+
+            # Check for game over(if new piece cannot be dropped)
+            if not self.current_piece.move((0,1)):
+                self.game_over()
+        self.root.after(self.speed, self.drop)
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
@@ -55,6 +70,22 @@ class Tetris():
             self.current_piece.move((1, 0))
         elif event.char in ["s", "\uf701"]:
             self.current_piece.rotate()
+
+    def game_over(self):
+        self.root.quit()
+        # Make buttons for new game, see score etc...
+        # Too much GUI stuff :pddd
+
+    def completed_lines(self):
+        y_coords_piece = [self.canvas.coords(box)[3] for box in self.current_piece.boxes]
+        
+        # Get all the boxes on the same line
+        # Only have to check the lines in y direction
+        all_boxes_coords = [self.canvas.coords(box)
+                            for box in self.canvas.find_all()
+                            if self.canvas.coords(box)[3] in y_coords_piece]
+        print(all_boxes_coords)
+        
 
 class Piece():
     BOX_SIZE = 20
@@ -70,14 +101,16 @@ class Piece():
     def __init__(self, canvas):
         self.canvas = canvas
         self.boxes = self.create_boxes()
-        self.rotate(randint(0,3))
-        self.initboard()
+        self.rotate(randint(1, 4))
+        # self.initboard()
 
     def initboard(self):
+        pass
+        '''
         left = self.START_POINT - self.BOX_SIZE
         right = self.START_POINT + self.BOX_SIZE
         self.canvas.create_line(self.START_POINT, 0, self.START_POINT, Tetris.HEIGHT, fill="yellow")
-        
+
         while left > 0:
             self.canvas.create_line(left, 0, left, Tetris.HEIGHT, fill="red")
             left -= self.BOX_SIZE
@@ -85,6 +118,7 @@ class Piece():
         while right < Tetris.WIDTH:
             self.canvas.create_line(right, 0, right, Tetris.HEIGHT, fill="red")
             right += self.BOX_SIZE
+        '''
 
     def create_boxes(self):
         boxes = []
@@ -101,7 +135,6 @@ class Piece():
         return boxes
 
     def move(self, direction):
-
         coords = [self.canvas.coords(box) for box in self.boxes]
         movements = self.__movement(coords, [direction] * len(coords))
         if movements:
@@ -136,7 +169,6 @@ class Piece():
         if x_right + x > Tetris.WIDTH:
             return False
 
-        # Returns False if moving box (x, y) would overlap another box
         overlap = set(self.canvas.find_overlapping((x_left + x_right) / 2 + x, 
                                                    (y_up + y_down) / 2 + y, 
                                                    (x_left + x_right) / 2 + x,
@@ -145,20 +177,16 @@ class Piece():
         if overlap & other_items:
             return False
         return True
-
     
     def __new_piece_coord(self, x, y):
         return (x * self.BOX_SIZE + self.START_POINT,
                 y * self.BOX_SIZE,
                 x * self.BOX_SIZE + self.BOX_SIZE + self.START_POINT,
                 y * self.BOX_SIZE + self.BOX_SIZE)
-
-
     
     def __movement(self, coords, directions):
         if all(self.__can_move(coords[i], directions[i]) for i in range(len(coords))):
             return [(direction[0] * self.BOX_SIZE, direction[1] * self.BOX_SIZE) for direction in directions]
-        
         return None
 
     def __rotate_movement(self, coords):
@@ -169,7 +197,7 @@ class Piece():
         max_x = max(new_coords, key=lambda x:x[0])[0]
         new_original = (max_x, 0)
 
-        directions = [(new_original[0] - coord[1] - coord[0], \
+        directions = [(new_original[0] - coord[1] - coord[0],
                       new_original[1] + coord[0] - coord[1]) for coord in new_coords]
         return self.__movement(coords, directions)
 
