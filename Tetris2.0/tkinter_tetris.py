@@ -189,11 +189,11 @@ class Tetris():
         self.status.update()
 
     def next_level(self):
-        self.speed -= 25
         self.level += 1
         
 
     def drop(self):
+        print(self.speed)
         if not self.current_square.move((0,1)):
             # Check for completed lines
             self.completed_lines()
@@ -203,7 +203,8 @@ class Tetris():
             self.next_canvas.delete("all")
             self.next_square = Square(self.next_canvas, 0)
 
-            self.speed = 500
+            #reset speed from hard drop
+            self.level = self.level
 
             # Check for game over(if new piece cannot be dropped)
             if not self.current_square.move((0,1)):
@@ -270,6 +271,7 @@ class Tetris():
         return self._level
 
     def set_level(self, level):
+        self.speed = 500 - (level - 1) * 25
         self._level = level
         self.update_status()
 
