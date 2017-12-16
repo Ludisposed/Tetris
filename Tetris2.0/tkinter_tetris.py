@@ -131,6 +131,9 @@ class Tetris():
     def __init__(self):
         self._level = 1
         self._score = 0
+        self._blockcount = 0
+
+        self.speed = 500
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -161,17 +164,14 @@ class Tetris():
         self.next_canvas.pack(padx=5 , pady=20)
 
     def resume(self):
-        self.level = 1
         self.score = 0
-        self.speed = 500
-        self.block_count = 0
+        self.blockcount = 0
 
-    def start(self):
-        self.resume()
-        self.update_status()
         self.canvas.delete("all")
         self.next_canvas.delete("all")
 
+    def start(self):
+        self.resume()
 
         self.current_square = Square(self.canvas, self.START_POINT)
         self.next_square = Square(self.next_canvas, 0)
@@ -187,18 +187,12 @@ class Tetris():
     def update_status(self):
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
         self.status.update()
-
-    def next_level(self):
-        self.level += 1
         
 
     def drop(self):
-        print(self.speed)
         if not self.current_square.move((0,1)):
-            # Check for completed lines
             self.completed_lines()
 
-            # Create a new piece
             self.current_square = Square(self.canvas, self.START_POINT, self.next_square.piece)
             self.next_canvas.delete("all")
             self.next_square = Square(self.next_canvas, 0)
@@ -206,17 +200,21 @@ class Tetris():
             #reset speed from hard drop
             self.level = self.level
 
-            # Check for game over(if new piece cannot be dropped)
-            if not self.current_square.move((0,1)):
-                self.game_over()
+            if self.is_game_over():
                 return 
 
-            # Next level logic
-            self.block_count += 1
-            if self.block_count % 5 == 0:
-                self.next_level()
+            self.blockcount += 1
                 
         self.root.after(self.speed, self.drop)
+    def is_game_over(self):
+        if not self.current_square.move((0,1)):
+            self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
+            self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
+            self.play_again_btn.place(x = self.WIDTH + 10, y = 200, width=100, height=25)
+            self.quit_btn.place(x = self.WIDTH + 10, y = 300, width=100, height=25)
+
+            return True
+        return False
 
     def game_control(self, event):
         if event.char in ["a", "\uf702"]:
@@ -235,12 +233,7 @@ class Tetris():
 
     def quit(self):
         self.root.quit()
-
-    def game_over(self):
-        self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
-        self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
-        self.play_again_btn.place(x = self.WIDTH + 10, y = 200, width=100, height=25)
-        self.quit_btn.place(x = self.WIDTH + 10, y = 300, width=100, height=25)
+        
 
     def completed_lines(self):
         y_coords_piece = [box.coords[3] for box in self.current_square.boxes]
@@ -282,8 +275,16 @@ class Tetris():
         self._score = score
         self.update_status()
 
+    def get_blockcount(self):
+        return self._blockcount
+
+    def set_blockcount(self, blockcount):
+        self.level = blockcount // 5 + 1
+        self._blockcount = blockcount
+
     level = property(get_level, set_level)
     score = property(get_score, set_score)
+    blockcount = property(get_blockcount, set_blockcount)
 
 
 
