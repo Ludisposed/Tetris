@@ -1,6 +1,33 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
 
+class Piece():
+    PIECES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
+              [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
+              [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
+              [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
+              [(0, 1), (1, 1), (1, 0), (2, 0)],     # Right Z
+              [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
+              [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
+    
+    def __init__(self):
+        self.piece = choice(self.PIECES)
+
+
+    def rotate(self):  
+        max_x = max(self.piece, key=lambda x:x[0])[0]
+        new_original = (max_x, 0)
+
+        return [(new_original[0] - coord[1],
+                 new_original[1] + coord[0]) for coord in self.piece]
+    
+    def rotate_directions(self):
+        rotated = self.rotate()
+        directions = [(rotated[i][0] - self.piece[i][0],
+                       rotated[i][1] - self.piece[i][1]) for i in range(len(self.piece))]
+
+        return directions
+
 class Box():
     def __init__(self, canvas, coords, tag = -1):
         self.canvas = canvas
@@ -31,7 +58,6 @@ class Box():
 class Board():
     BOX_SIZE = 20
     
-    
     def __init__(self, canvas, start_point):
         self.piece = Piece()
         self.canvas = canvas
@@ -43,12 +69,11 @@ class Board():
 
     def move(self, direction):
         coords = [box.coords for box in self.boxes]
-        movements = self.__movement(coords, [direction] * len(coords))
+        movements = self.__movement(coords, direction)
         if not movements is None:
             self.__move(movements)
             return True
         return False
-
 
 
     def rotate(self, times = 1):
@@ -75,24 +100,25 @@ class Board():
         y = y * self.BOX_SIZE
         x_left, y_up, x_right, y_down = box_coords
 
-        if y_down + y > Tetris.HEIGHT:
-            return False
-        if x_left + x < 0:
-            return False
-        if x_right + x > Tetris.WIDTH:
-            return False
-
         overlap = set(self.canvas.find_overlapping((x_left + x_right) / 2 + x, 
                                                    (y_up + y_down) / 2 + y, 
                                                    (x_left + x_right) / 2 + x,
                                                    (y_up + y_down) / 2 + y))
         other_items = set(self.canvas.find_all()) - set([box.tag for box in self.boxes])
-        if overlap & other_items:
+
+        if y_down + y > Tetris.HEIGHT or \
+           x_left + x < 0 or \
+           x_right + x > Tetris.WIDTH or \
+           overlap & other_items:
             return False
         return True
     
     
     def __movement(self, coords, directions):
+        if len(directions) < len(coords):
+            directions = [directions] * len(coords)
+
+
         if all(self.__can_move(coords[i], directions[i]) for i in range(len(coords))):
             return [(direction[0] * self.BOX_SIZE, direction[1] * self.BOX_SIZE) for direction in directions]
         return None
@@ -102,6 +128,7 @@ class Tetris():
     WIDTH = 300
     HEIGHT = 500
     START_POINT = WIDTH / 2 / Board.BOX_SIZE * Board.BOX_SIZE - Board.BOX_SIZE
+
     def __init__(self):
         self.level = 1
         self.score = 0
@@ -151,7 +178,7 @@ class Tetris():
         self.root.mainloop()
 
     def hard_drop(self):
-        pass
+        self.speed = 10
 
     def update_status(self):
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
@@ -169,6 +196,8 @@ class Tetris():
 
             # Create a new piece
             self.current_piece = Board(self.canvas, self.START_POINT)
+
+            self.speed = 500
 
             # Check for game over(if new piece cannot be dropped)
             if not self.current_piece.move((0,1)):
@@ -188,6 +217,8 @@ class Tetris():
         elif event.char in ["d", "\uf703"]:
             self.current_piece.move((1, 0))
         elif event.char in ["s", "\uf701"]:
+            self.hard_drop()
+        elif event.char in ["w", "\uf700"]:
             self.current_piece.rotate()
 
     def play_again(self):
@@ -233,32 +264,7 @@ class Tetris():
                 self.update_status()
 
 
-class Piece():
-    PIECES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
-              [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
-              [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
-              [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
-              [(0, 1), (1, 1), (1, 0), (2, 0)],     # Right Z
-              [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
-              [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
-    
-    def __init__(self):
-        self.piece = choice(self.PIECES)
 
-
-    def rotate(self):  
-        max_x = max(self.piece, key=lambda x:x[0])[0]
-        new_original = (max_x, 0)
-
-        return [(new_original[0] - coord[1],
-                 new_original[1] + coord[0]) for coord in self.piece]
-    
-    def rotate_directions(self):
-        rotated = self.rotate()
-        directions = [(rotated[i][0] - self.piece[i][0],
-                       rotated[i][1] - self.piece[i][1]) for i in range(len(self.piece))]
-
-        return directions
 
 
 if __name__ == '__main__':
