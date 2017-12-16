@@ -11,48 +11,57 @@ class Piece():
               [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
     
     def __init__(self):
-        self.piece = choice(self.PIECES)
-
-
-    def rotate(self):  
-        max_x = max(self.piece, key=lambda x:x[0])[0]
-        new_original = (max_x, 0)
-
-        return [(new_original[0] - coord[1],
-                 new_original[1] + coord[0]) for coord in self.piece]
-    
-    def rotate_directions(self):
-        rotated = self.rotate()
-        directions = [(rotated[i][0] - self.piece[i][0],
-                       rotated[i][1] - self.piece[i][1]) for i in range(len(self.piece))]
-
-        return directions
-
-class Box():
-    def __init__(self, canvas, coords, tag = -1):
-        self.canvas = canvas
-        self.tag = tag
-        if tag < 0:
-            self.tag = self.draw_on_canvas(coords)
+        self.__piece = choice(self.PIECES)
 
     @property
     def coords(self):
-        return self.canvas.coords(self.tag)
+        return self.__piece
 
-    def draw_on_canvas(self, coords):
-        x_left, y_up, x_right, y_down = coords
-        return self.canvas.create_rectangle(x_left,
-                                            y_up,
-                                            x_right,
-                                            y_down,
-                                            fill="blue")
+    def rotate(self):  
+        self.__piece = self.__rotate()
+    
+    def rotate_directions(self):
+        rotated = self.__rotate()
+        directions = [(rotated[i][0] - self.__piece[i][0],
+                       rotated[i][1] - self.__piece[i][1]) for i in range(len(self.__piece))]
+
+        return directions
+    def __rotate(self):
+        max_x = max(self.__piece, key=lambda x:x[0])[0]
+        new_original = (max_x, 0)
+
+        return [(new_original[0] - coord[1],
+                 new_original[1] + coord[0]) for coord in self.__piece]
+
+
+class Box():
+    def __init__(self, canvas, coord, tag = -1):
+        self.__canvas = canvas
+        self.__tag = tag
+        if tag < 0:
+            self.__tag = self.__draw_on_canvas(coord)
+
+    @property
+    def coords(self):
+        return self.__canvas.coords(self.__tag)
+
+    @property
+    def tag(self):
+        return self.__tag
         
     def move(self, movement):
         moved_x, moved_y = movement
-        self.canvas.move(self.tag,
-                         moved_x,
-                         moved_y)
+        self.__canvas.move(self.__tag,
+                           moved_x,
+                           moved_y)
 
+    def __draw_on_canvas(self, coord):
+        x_left, y_up, x_right, y_down = coord
+        return self.__canvas.create_rectangle(x_left,
+                                              y_up,
+                                              x_right,
+                                              y_down,
+                                              fill="blue")
 
 
 class Board():
@@ -61,38 +70,37 @@ class Board():
     def __init__(self, canvas, start_point):
         self.piece = Piece()
         self.canvas = canvas
-        self.boxes = self.create_boxes(start_point)
+        self.boxes = self.__create_boxes(start_point)
 
-    def create_boxes(self, start_point):
-        return [Box(self.canvas, self.__new_piece_coord(coord[0], coord[1], start_point)) \
-                for coord in self.piece.piece]
+    def __create_boxes(self, start_point):
+        boxes = []
+        for coord in self.piece.coords:
+            x, y = coord
+            box_coord = (x * self.BOX_SIZE + start_point,
+                         y * self.BOX_SIZE,
+                         x * self.BOX_SIZE + self.BOX_SIZE + start_point,
+                         y * self.BOX_SIZE + self.BOX_SIZE)
+            boxes += [Box(self.canvas, box_coord)]
+
+        return boxes
 
     def move(self, direction):
-        coords = [box.coords for box in self.boxes]
-        movements = self.__movement(coords, direction)
-        if not movements is None:
-            self.__move(movements)
+        if all(self.__can_move(box.coords, direction) for box in self.boxes):
+            x, y = direction
+            for box in self.boxes:
+                box.move((x * self.BOX_SIZE, y * self.BOX_SIZE))
             return True
         return False
 
 
-    def rotate(self, times = 1):
-        for _ in range(times % 4):
-            coords = [box.coords for box in self.boxes]
-            movements = self.__movement(coords, self.piece.rotate_directions())
-            if movements:
-                self.piece.piece = self.piece.rotate()
-                self.__move(movements)
+    def rotate(self):
+        directions = self.piece.rotate_directions()
+        if all(self.__can_move(self.boxes[i].coords, directions[i]) for i in range(len(self.boxes))):
+            self.piece.rotate()
+            for i in range(len(self.boxes)):
+                x, y = directions[i]
+                self.boxes[i].move((x * self.BOX_SIZE, y * self.BOX_SIZE))
 
-    def __new_piece_coord(self, x, y, start_point):
-        return (x * self.BOX_SIZE + start_point,
-                y * self.BOX_SIZE,
-                x * self.BOX_SIZE + self.BOX_SIZE + start_point,
-                y * self.BOX_SIZE + self.BOX_SIZE)
-
-    def __move(self, movements):
-        for i in range(len(self.boxes)): 
-            self.boxes[i].move(movements[i])
 
     def __can_move(self, box_coords, new_pos):
         x, y = new_pos
@@ -112,16 +120,6 @@ class Board():
            overlap & other_items:
             return False
         return True
-    
-    
-    def __movement(self, coords, directions):
-        if len(directions) < len(coords):
-            directions = [directions] * len(coords)
-
-
-        if all(self.__can_move(coords[i], directions[i]) for i in range(len(coords))):
-            return [(direction[0] * self.BOX_SIZE, direction[1] * self.BOX_SIZE) for direction in directions]
-        return None
 
 
 class Tetris():
