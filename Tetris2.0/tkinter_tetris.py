@@ -64,13 +64,29 @@ class Box():
                                               fill="blue")
 
 
-class Board():
+class Square():
     BOX_SIZE = 20
     
     def __init__(self, canvas, start_point):
         self.piece = Piece()
         self.canvas = canvas
         self.boxes = self.__create_boxes(start_point)
+
+    def move(self, direction):
+        if all(self.__can_move(box.coords, direction) for box in self.boxes):
+            x, y = direction
+            for box in self.boxes:
+                box.move((x * self.BOX_SIZE, y * self.BOX_SIZE))
+            return True
+        return False
+
+    def rotate(self):
+        directions = self.piece.rotate_directions()
+        if all(self.__can_move(self.boxes[i].coords, directions[i]) for i in range(len(self.boxes))):
+            self.piece.rotate()
+            for i in range(len(self.boxes)):
+                x, y = directions[i]
+                self.boxes[i].move((x * self.BOX_SIZE, y * self.BOX_SIZE))
 
     def __create_boxes(self, start_point):
         boxes = []
@@ -83,24 +99,6 @@ class Board():
             boxes += [Box(self.canvas, box_coord)]
 
         return boxes
-
-    def move(self, direction):
-        if all(self.__can_move(box.coords, direction) for box in self.boxes):
-            x, y = direction
-            for box in self.boxes:
-                box.move((x * self.BOX_SIZE, y * self.BOX_SIZE))
-            return True
-        return False
-
-
-    def rotate(self):
-        directions = self.piece.rotate_directions()
-        if all(self.__can_move(self.boxes[i].coords, directions[i]) for i in range(len(self.boxes))):
-            self.piece.rotate()
-            for i in range(len(self.boxes)):
-                x, y = directions[i]
-                self.boxes[i].move((x * self.BOX_SIZE, y * self.BOX_SIZE))
-
 
     def __can_move(self, box_coords, new_pos):
         x, y = new_pos
@@ -125,7 +123,7 @@ class Board():
 class Tetris():
     WIDTH = 300
     HEIGHT = 500
-    START_POINT = WIDTH / 2 / Board.BOX_SIZE * Board.BOX_SIZE - Board.BOX_SIZE
+    START_POINT = WIDTH / 2 / Square.BOX_SIZE * Square.BOX_SIZE - Square.BOX_SIZE
 
     def __init__(self):
         self.level = 1
@@ -169,7 +167,7 @@ class Tetris():
         self.speed = 500
         self.block_count = 0
 
-        self.current_piece = Board(self.canvas, self.START_POINT)
+        self.current_square = Square(self.canvas, self.START_POINT)
         self.canvas.update()
         self.root.after(self.speed, None)
         self.drop()
@@ -188,17 +186,17 @@ class Tetris():
         self.update_status()
 
     def drop(self):
-        if not self.current_piece.move((0,1)):
+        if not self.current_square.move((0,1)):
             # Check for completed lines
             self.completed_lines()
 
             # Create a new piece
-            self.current_piece = Board(self.canvas, self.START_POINT)
+            self.current_square = Square(self.canvas, self.START_POINT)
 
             self.speed = 500
 
             # Check for game over(if new piece cannot be dropped)
-            if not self.current_piece.move((0,1)):
+            if not self.current_square.move((0,1)):
                 self.game_over()
                 return 
 
@@ -211,13 +209,13 @@ class Tetris():
 
     def call_back(self, event):
         if event.char in ["a", "\uf702"]:
-            self.current_piece.move((-1, 0))
+            self.current_square.move((-1, 0))
         elif event.char in ["d", "\uf703"]:
-            self.current_piece.move((1, 0))
+            self.current_square.move((1, 0))
         elif event.char in ["s", "\uf701"]:
             self.hard_drop()
         elif event.char in ["w", "\uf700"]:
-            self.current_piece.rotate()
+            self.current_square.rotate()
 
     def play_again(self):
         for box in self.canvas.find_all():
@@ -237,13 +235,13 @@ class Tetris():
         self.quit_btn.place(x = self.WIDTH + 10, y = 300, width=100, height=25)
 
     def completed_lines(self):
-        y_coords_piece = [box.coords[3] for box in self.current_piece.boxes]
+        y_coords_piece = [box.coords[3] for box in self.current_square.boxes]
         all_boxes_coords = [(self.canvas.coords(box)[0], self.canvas.coords(box)[3])
                             for box in self.canvas.find_all()
                             if self.canvas.coords(box)[3] in y_coords_piece]
         
         for y in y_coords_piece:
-            if all( (x, y) in all_boxes_coords for x in range(10, self.WIDTH - 10, Board.BOX_SIZE) ):
+            if all( (x, y) in all_boxes_coords for x in range(10, self.WIDTH - 10, Square.BOX_SIZE) ):
                 # Clear line
                 boxes_to_delete = [box
                                    for box in self.canvas.find_all()
@@ -256,7 +254,7 @@ class Tetris():
                                  for box in self.canvas.find_all()
                                  if self.canvas.coords(box)[3] < y]
                 for box in boxes_to_drop:
-                    self.canvas.move(box, 0, Board.BOX_SIZE)
+                    self.canvas.move(box, 0, Square.BOX_SIZE)
 
                 self.score += 1
                 self.update_status()
