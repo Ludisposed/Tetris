@@ -129,6 +129,8 @@ class Tetris():
     START_POINT = WIDTH / 2 / Square.BOX_SIZE * Square.BOX_SIZE - Square.BOX_SIZE
 
     def __init__(self):
+        self._level = 1
+        self._score = 0
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -189,7 +191,7 @@ class Tetris():
     def next_level(self):
         self.speed -= 25
         self.level += 1
-        self.update_status()
+        
 
     def drop(self):
         if not self.current_square.move((0,1)):
@@ -262,8 +264,25 @@ class Tetris():
                     self.canvas.move(box, 0, Square.BOX_SIZE)
 
                 self.score += 1
-                self.update_status()
     
+    #set & get
+    def get_level(self):
+        return self._level
+
+    def set_level(self, level):
+        self._level = level
+        self.update_status()
+
+    def get_score(self):
+        return self._score
+
+    def set_score(self, score):
+        self._score = score
+        self.update_status()
+
+    level = property(get_level, set_level)
+    score = property(get_score, set_score)
+
 
 
 
