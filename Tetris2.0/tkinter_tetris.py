@@ -1,6 +1,7 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from square import Square
 from utility import *
+from views import GameCanvas
 
 
 
@@ -23,10 +24,11 @@ class Tetris():
         self.next_square_canvas()
 
     def game_canvas(self):
-        self.canvas = Canvas(self.root, 
+        
+        self.canvas = GameCanvas(self.root, 
                              width = GAME_WIDTH, 
                              height = GAME_HEIGHT)
-        self.canvas.pack(padx=5 , pady=0, side=LEFT)
+        self.canvas.pack(padx=5 , pady=10, side=LEFT)
 
     def level_score_label(self):
         self.status_var = StringVar()        
@@ -39,7 +41,7 @@ class Tetris():
         self.next_canvas = Canvas(self.root,
                                  width = 60,
                                  height = 60)
-        self.next_canvas.pack(padx=5 , pady=20)
+        self.next_canvas.pack(padx=5 , pady=10)
 
     def resume(self):
         self.score = 0
@@ -50,6 +52,7 @@ class Tetris():
 
     def start(self):
         self.resume()
+
 
         self.current_square = Square(self.canvas, GAME_START_POINT)
         self.next_square = Square(self.next_canvas, 0)
@@ -114,28 +117,8 @@ class Tetris():
         
 
     def completed_lines(self):
-        y_coords_piece = [box.coords[3] for box in self.current_square.boxes]
-        all_boxes_coords = [(self.canvas.coords(box)[0], self.canvas.coords(box)[3])
-                            for box in self.canvas.find_all()
-                            if self.canvas.coords(box)[3] in y_coords_piece]
-        
-        for y in y_coords_piece:
-            if all( (x, y) in all_boxes_coords for x in range(10, GAME_WIDTH - 10, BOX_SIZE) ):
-                # Clear line
-                boxes_to_delete = [box
-                                   for box in self.canvas.find_all()
-                                   if self.canvas.coords(box)[3] == y]
-                for box in boxes_to_delete:
-                    self.canvas.delete(box)
-
-                # Drop boxes
-                boxes_to_drop = [box
-                                 for box in self.canvas.find_all()
-                                 if self.canvas.coords(box)[3] < y]
-                for box in boxes_to_drop:
-                    self.canvas.move(box, 0, Square.BOX_SIZE)
-
-                self.score += 1
+        y_coords = [box.coords[3] for box in self.current_square.boxes]
+        self.score += self.canvas.completed_lines(y_coords)
     
     #set & get
     def get_level(self):
@@ -163,10 +146,6 @@ class Tetris():
     level = property(get_level, set_level)
     score = property(get_score, set_score)
     blockcount = property(get_blockcount, set_blockcount)
-
-
-
-
 
 
 if __name__ == '__main__':

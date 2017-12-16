@@ -4,7 +4,6 @@ from utility import *
 
 class Piece():
     
-    
     def __init__(self):
         self.__piece = choice(PIECES)
 
@@ -27,7 +26,6 @@ class Piece():
 
         return [(new_original[0] - coord[1],
                  new_original[1] + coord[0]) for coord in self.__piece]
-
 
 class Box():
     def __init__(self, canvas, coord, tag = -1):
@@ -57,7 +55,6 @@ class Box():
                                               x_right,
                                               y_down,
                                               fill="blue")
-
 
 class Square():
     def __init__(self, canvas, start_point, piece = None):
