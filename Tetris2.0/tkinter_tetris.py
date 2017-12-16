@@ -133,10 +133,7 @@ class Tetris():
         self.root = Tk()
         self.root.geometry("500x550") 
         self.root.title('Tetris')
-        self.root.bind("<Key>", self.call_back)
-
-        self.play_again_btn = None
-        self.quit_btn = None
+        self.root.bind("<Key>", self.game_control)
 
         self.game_canvas()
         self.level_score_label()
@@ -149,11 +146,7 @@ class Tetris():
         self.canvas.pack(padx=5 , pady=0, side=LEFT)
 
     def level_score_label(self):
-        self.level = 1
-        self.score = 0
-
         self.status_var = StringVar()        
-        self.status_var.set(f"Level: {self.level}, Score: {self.score}")        
         self.status = Label(self.root, 
                             textvariable=self.status_var, 
                             font=("Helvetica", 10, "bold"))
@@ -173,6 +166,10 @@ class Tetris():
 
     def start(self):
         self.resume()
+        self.update_status()
+        self.canvas.delete("all")
+        self.next_canvas.delete("all")
+
 
         self.current_square = Square(self.canvas, self.START_POINT)
         self.next_square = Square(self.next_canvas, 0)
@@ -218,7 +215,7 @@ class Tetris():
                 
         self.root.after(self.speed, self.drop)
 
-    def call_back(self, event):
+    def game_control(self, event):
         if event.char in ["a", "\uf702"]:
             self.current_square.move((-1, 0))
         elif event.char in ["d", "\uf703"]:
@@ -229,11 +226,8 @@ class Tetris():
             self.current_square.rotate()
 
     def play_again(self):
-        for box in self.canvas.find_all():
-            self.canvas.delete(box)
         self.play_again_btn.destroy()
         self.quit_btn.destroy()
-
         self.start()
 
     def quit(self):
@@ -269,6 +263,7 @@ class Tetris():
 
                 self.score += 1
                 self.update_status()
+    
 
 
 
