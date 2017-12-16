@@ -67,8 +67,11 @@ class Box():
 class Square():
     BOX_SIZE = 20
     
-    def __init__(self, canvas, start_point):
-        self.piece = Piece()
+    def __init__(self, canvas, start_point, piece = None):
+        
+        self.piece = piece
+        if not piece:
+            self.piece = Piece()
         self.canvas = canvas
         self.boxes = self.__create_boxes(start_point)
 
@@ -126,25 +129,28 @@ class Tetris():
     START_POINT = WIDTH / 2 / Square.BOX_SIZE * Square.BOX_SIZE - Square.BOX_SIZE
 
     def __init__(self):
-        self.level = 1
-        self.score = 0
 
         self.root = Tk()
         self.root.geometry("500x550") 
         self.root.title('Tetris')
+        self.root.bind("<Key>", self.call_back)
 
-        
+        self.play_again_btn = None
+        self.quit_btn = None
 
+        self.game_canvas()
+        self.level_score_label()
+        self.next_square_canvas()
+
+    def game_canvas(self):
         self.canvas = Canvas(self.root, 
                              width = Tetris.WIDTH, 
                              height = Tetris.HEIGHT)
-
-        self.next_piece = Canvas(self.root,
-                                 width = 60,
-                                 height = 60)
-        self.root.bind("<Key>", self.call_back)
         self.canvas.pack(padx=5 , pady=0, side=LEFT)
-        self.next_piece.pack(padx=5 , pady=20)
+
+    def level_score_label(self):
+        self.level = 1
+        self.score = 0
 
         self.status_var = StringVar()        
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")        
@@ -153,21 +159,24 @@ class Tetris():
                             font=("Helvetica", 10, "bold"))
         self.status.place(x = self.WIDTH + 10, y = 100, width=100, height=25)
 
-        self.play_again_btn = None
-        self.quit_btn = None
+    def next_square_canvas(self):
+        self.next_canvas = Canvas(self.root,
+                                 width = 60,
+                                 height = 60)
+        self.next_canvas.pack(padx=5 , pady=20)
 
-    def start(self):
-        self.next_piece.create_rectangle(0,
-                                       0,
-                                       40,
-                                       40,
-                                       fill="red")
+    def resume(self):
         self.level = 1
         self.score = 0
         self.speed = 500
         self.block_count = 0
 
+    def start(self):
+        self.resume()
+
         self.current_square = Square(self.canvas, self.START_POINT)
+        self.next_square = Square(self.next_canvas, 0)
+
         self.canvas.update()
         self.root.after(self.speed, None)
         self.drop()
@@ -191,7 +200,9 @@ class Tetris():
             self.completed_lines()
 
             # Create a new piece
-            self.current_square = Square(self.canvas, self.START_POINT)
+            self.current_square = Square(self.canvas, self.START_POINT, self.next_square.piece)
+            self.next_canvas.delete("all")
+            self.next_square = Square(self.next_canvas, 0)
 
             self.speed = 500
 
