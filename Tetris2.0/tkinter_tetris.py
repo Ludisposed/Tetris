@@ -1,8 +1,159 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
-from square import Square
-from utility import *
-from views import GameCanvas
+from random import choice, randint
 
+class Utility():
+    PIECES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
+          [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
+          [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
+          [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
+          [(0, 1), (1, 1), (1, 0), (2, 0)],     # Right Z
+          [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
+          [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
+
+    BOX_SIZE = 20
+
+    GAME_WIDTH = 300
+    GAME_HEIGHT = 500
+    GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
+
+class Piece():
+    
+    def __init__(self):
+        self.__piece = choice(Utility.PIECES)
+
+    @property
+    def coords(self):
+        return self.__piece
+
+    def rotate(self):  
+        self.__piece = self.__rotate()
+    
+    def rotate_directions(self):
+        rotated = self.__rotate()
+        directions = [(rotated[i][0] - self.__piece[i][0],
+                       rotated[i][1] - self.__piece[i][1]) for i in range(len(self.__piece))]
+
+        return directions
+    def __rotate(self):
+        max_x = max(self.__piece, key=lambda x:x[0])[0]
+        new_original = (max_x, 0)
+
+        return [(new_original[0] - coord[1],
+                 new_original[1] + coord[0]) for coord in self.__piece]
+
+class Box():
+    def __init__(self, canvas, coord, tag = -1):
+        self.__canvas = canvas
+        self.__tag = tag
+        if tag < 0:
+            self.__tag = self.__draw_on_canvas(coord)
+
+    @property
+    def coords(self):
+        return self.__canvas.coords(self.__tag)
+
+    @property
+    def tag(self):
+        return self.__tag
+        
+    def move(self, movement):
+        moved_x, moved_y = movement
+        self.__canvas.move(self.__tag,
+                           moved_x,
+                           moved_y)
+
+    def __draw_on_canvas(self, coord):
+        x_left, y_up, x_right, y_down = coord
+        return self.__canvas.create_rectangle(x_left,
+                                              y_up,
+                                              x_right,
+                                              y_down,
+                                              fill="blue")
+
+class Square():
+    def __init__(self, canvas, start_point, piece = None):
+        
+        self.piece = piece
+        if not piece:
+            self.piece = Piece()
+        self.canvas = canvas
+        self.boxes = self.__create_boxes(start_point)
+
+    def move(self, direction):
+        if all(self.__can_move(box.coords, direction) for box in self.boxes):
+            x, y = direction
+            for box in self.boxes:
+                box.move((x * Utility.BOX_SIZE, y * Utility.BOX_SIZE))
+            return True
+        return False
+
+    def rotate(self):
+        directions = self.piece.rotate_directions()
+        if all(self.__can_move(self.boxes[i].coords, directions[i]) for i in range(len(self.boxes))):
+            self.piece.rotate()
+            for i in range(len(self.boxes)):
+                x, y = directions[i]
+                self.boxes[i].move((x * Utility.BOX_SIZE, y * Utility.BOX_SIZE))
+
+    def __create_boxes(self, start_point):
+        boxes = []
+        for coord in self.piece.coords:
+            x, y = coord
+            box_coord = (x * Utility.BOX_SIZE + start_point,
+                         y * Utility.BOX_SIZE,
+                         x * Utility.BOX_SIZE + Utility.BOX_SIZE + start_point,
+                         y * Utility.BOX_SIZE + Utility.BOX_SIZE)
+            boxes += [Box(self.canvas, box_coord)]
+
+        return boxes
+
+    def __can_move(self, box_coords, new_pos):
+        x, y = new_pos
+        x = x * Utility.BOX_SIZE
+        y = y * Utility.BOX_SIZE
+        x_left, y_up, x_right, y_down = box_coords
+
+        overlap = set(self.canvas.find_overlapping((x_left + x_right) / 2 + x, 
+                                                   (y_up + y_down) / 2 + y, 
+                                                   (x_left + x_right) / 2 + x,
+                                                   (y_up + y_down) / 2 + y))
+        other_items = set(self.canvas.find_all()) - set([box.tag for box in self.boxes])
+
+        if y_down + y > Utility.GAME_HEIGHT or \
+           x_left + x < 0 or \
+           x_right + x > Utility.GAME_WIDTH or \
+           overlap & other_items:
+            return False
+        return True
+
+class GameCanvas(Canvas):
+
+    def completed_lines(self, y_coords):
+        cleaned_lines = 0
+        all_boxes_coords = [(self.coords(box)[0], self.coords(box)[3])
+                            for box in self.find_all()
+                            if self.coords(box)[3] in y_coords]
+        
+        for y in y_coords:
+            if all( (x, y) in all_boxes_coords for x in range(10, Utility.GAME_WIDTH - 10, Utility.BOX_SIZE) ):
+                # Clear line
+                boxes_to_delete = [box
+                                   for box in self.find_all()
+                                   if self.coords(box)[3] == y]
+                for box in boxes_to_delete:
+                    self.delete(box)
+
+                # Drop boxes
+                boxes_to_drop = [box
+                                 for box in self.find_all()
+                                 if self.coords(box)[3] < y]
+                for box in boxes_to_drop:
+                    self.move(box, 0, Utility.BOX_SIZE)
+
+                cleaned_lines += 1
+        return cleaned_lines
+
+        
 
 
 class Tetris():
@@ -43,7 +194,7 @@ class Tetris():
     def start(self):
         self.resume()
 
-        self.current_square = Square(self.canvas, GAME_START_POINT)
+        self.current_square = Square(self.canvas, Utility.GAME_START_POINT)
         self.next_square = Square(self.next_canvas, 0)
 
         self.canvas.update()
@@ -55,7 +206,7 @@ class Tetris():
         if not self.current_square.move((0,1)):
             self.completed_lines()
 
-            self.current_square = Square(self.canvas, GAME_START_POINT, self.next_square.piece)
+            self.current_square = Square(self.canvas, Utility.GAME_START_POINT, self.next_square.piece)
             self.next_canvas.delete("all")
             self.next_square = Square(self.next_canvas, 0)
 
@@ -73,6 +224,7 @@ class Tetris():
         self.speed = 10
 
     def update_status(self):
+        
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
         self.status.update()
 
@@ -80,8 +232,8 @@ class Tetris():
         if not self.current_square.move((0,1)):
             self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
             self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
-            self.play_again_btn.place(x = GAME_WIDTH + 10, y = 200, width=100, height=25)
-            self.quit_btn.place(x = GAME_WIDTH + 10, y = 300, width=100, height=25)
+            self.play_again_btn.place(x = Utility.GAME_WIDTH + 10, y = 200, width=100, height=25)
+            self.quit_btn.place(x = Utility.GAME_WIDTH + 10, y = 300, width=100, height=25)
 
             return True
         return False
@@ -96,13 +248,15 @@ class Tetris():
 
     def completed_lines(self):
         y_coords = [box.coords[3] for box in self.current_square.boxes]
+        
         self.score += self.canvas.completed_lines(y_coords)
+        
 
     def __game_canvas(self):
         
         self.canvas = GameCanvas(self.root, 
-                             width = GAME_WIDTH, 
-                             height = GAME_HEIGHT)
+                             width = Utility.GAME_WIDTH, 
+                             height = Utility.GAME_HEIGHT)
         self.canvas.pack(padx=5 , pady=10, side=LEFT)
 
     def __level_score_label(self):
@@ -110,7 +264,7 @@ class Tetris():
         self.status = Label(self.root, 
                             textvariable=self.status_var, 
                             font=("Helvetica", 10, "bold"))
-        self.status.place(x = GAME_WIDTH + 10, y = 100, width=100, height=25)
+        self.status.place(x = Utility.GAME_WIDTH + 10, y = 100, width=100, height=25)
 
     def __next_square_canvas(self):
         self.next_canvas = Canvas(self.root,
