@@ -10,7 +10,7 @@ Other then that, great work on the refractor ^^
 
 # Idk if I like this bare Classes, Too Javaish?
 class Utility():
-    PIECES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
+    SHAPES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
               [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
               [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
               [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
@@ -60,39 +60,43 @@ Do these properties also need setters?
         self.__piece = value
 """
 
-class Piece():
+class Shape():
     def __init__(self):
-        self.__piece = choice(Utility.PIECES)
+        self.__coords = choice(Utility.SHAPES)
 
     @property
     def coords(self):
-        return self.__piece
+        return self.__coords
 
     def rotate(self):  
-        self.__piece = self.__rotate()
+        self._coords = self.__rotate()
     
     def rotate_directions(self):
         rotated = self.__rotate()
-        directions = [(rotated[i][0] - self.__piece[i][0],
-                       rotated[i][1] - self.__piece[i][1]) for i in range(len(self.__piece))]
+        directions = [(rotated[i][0] - self.__coords[i][0],
+                       rotated[i][1] - self.__coords[i][1]) for i in range(len(self.__coords))]
 
         return directions
 
     def __rotate(self):
-        max_x = max(self.__piece, key=lambda x:x[0])[0]
+        max_x = max(self.__coords, key=lambda x:x[0])[0]
         new_original = (max_x, 0)
 
         return [(new_original[0] - coord[1],
-                 new_original[1] + coord[0]) for coord in self.__piece]
+                 new_original[1] + coord[0]) for coord in self.__coords]
 
 
-class Square():
-    def __init__(self, canvas, start_point, piece = None):
-        self.piece = piece
-        if not piece:
-            self.piece = Piece()
+class Piece():
+    def __init__(self, canvas, start_point, shape = None):
+        self.__shape = shape
+        if not shape:
+            self.__shape = Shape()
         self.canvas = canvas
         self.boxes = self.__create_boxes(start_point)
+    
+    @property
+    def shape(self):
+        return self.__shape
 
     def move(self, direction):
         if all(self.__can_move(self.canvas.coords(box), direction) for box in self.boxes):
@@ -105,9 +109,9 @@ class Square():
         return False
 
     def rotate(self):
-        directions = self.piece.rotate_directions()
+        directions = self.__shape.rotate_directions()
         if all(self.__can_move(self.canvas.coords(self.boxes[i]), directions[i]) for i in range(len(self.boxes))):
-            self.piece.rotate()
+            self.__shape.rotate()
             for i in range(len(self.boxes)):
                 x, y = directions[i]
                 self.canvas.move(self.boxes[i],
@@ -116,7 +120,7 @@ class Square():
 
     def __create_boxes(self, start_point):
         boxes = []
-        for coord in self.piece.coords:
+        for coord in self.__shape.coords:
             x, y = coord
             box = self.canvas.create_rectangle(x * Utility.BOX_SIZE + start_point,
                                                y * Utility.BOX_SIZE,
@@ -188,13 +192,13 @@ class Tetris():
         self.root.bind("<Key>", self.game_control)
         self.__game_canvas()
         self.__level_score_label()
-        self.__next_square_canvas()
+        self.__next_piece_canvas()
 
     def game_control(self, event):
         if event.char in ["a", "A", "\uf702"]:
-            self.current_square.move((-1, 0))
+            self.current_piece.move((-1, 0))
         elif event.char in ["d", "D", "\uf703"]:
-            self.current_square.move((1, 0))
+            self.current_piece.move((1, 0))
         # Hard drop left for now, I wanna do it different...
         # 1. Have a mirror piece, (What the piece will look like, if you do the "hard drop")
         # 2. When "Hard Drop" is pressed, Fill the mirror piece and delete the old one. No more clunky speed things :)
@@ -202,7 +206,7 @@ class Tetris():
         # elif event.char in ["s", "S", "\uf701"]:
         #     self.hard_drop()
         elif event.char in ["w", "W", "\uf700"]:
-            self.current_square.rotate()
+            self.current_piece.rotate()
 
     # Is this after a Pause? Or a new_game?
     def new_game(self):
@@ -214,18 +218,18 @@ class Tetris():
         self.canvas.delete("all")
         self.next_canvas.delete("all")
         
-        self.current_square = None
-        self.next_square = None
+        self.current_piece = None
+        self.next_piece = None
 
-        self.update_square()
+        self.update_piece()
 
-    def update_square(self):
-        if not self.next_square:
-            self.next_square = Square(self.next_canvas, 0)
+    def update_piece(self):
+        if not self.next_piece:
+            self.next_piece = Piece(self.next_canvas, 0)
 
-        self.current_square = Square(self.canvas, Utility.GAME_START_POINT, self.next_square.piece)
+        self.current_piece = Piece(self.canvas, Utility.GAME_START_POINT, self.next_piece.shape)
         self.next_canvas.delete("all")
-        self.next_square = Square(self.next_canvas, 0)
+        self.next_piece = Piece(self.next_canvas, 0)
 
     def start(self):
         self.new_game()
@@ -234,9 +238,9 @@ class Tetris():
         self.root.mainloop()
         
     def drop(self):
-        if not self.current_square.move((0,1)):
+        if not self.current_piece.move((0,1)):
             self.completed_lines()
-            self.update_square()
+            self.update_piece()
             if self.is_game_over():
                 return 
 
@@ -249,7 +253,7 @@ class Tetris():
         self.status.update()
 
     def is_game_over(self):
-        if not self.current_square.move((0,1)):
+        if not self.current_piece.move((0,1)):
             self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
             self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
             self.play_again_btn.place(x = Utility.GAME_WIDTH + 10, y = 200, width=100, height=25)
@@ -266,7 +270,7 @@ class Tetris():
         self.root.quit()     
 
     def completed_lines(self):
-        y_coords = [self.canvas.coords(box)[3] for box in self.current_square.boxes]
+        y_coords = [self.canvas.coords(box)[3] for box in self.current_piece.boxes]
         self.score += self.canvas.completed_lines(y_coords)
 
     def __game_canvas(self):
@@ -282,7 +286,7 @@ class Tetris():
                             font=("Helvetica", 10, "bold"))
         self.status.place(x = Utility.GAME_WIDTH + 10, y = 100, width=100, height=25)
 
-    def __next_square_canvas(self):
+    def __next_piece_canvas(self):
         self.next_canvas = Canvas(self.root,
                                  width = 60,
                                  height = 60)
