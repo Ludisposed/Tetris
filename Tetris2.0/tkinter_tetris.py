@@ -49,7 +49,7 @@ class Shape():
         return self.__coords
 
     def rotate(self):  
-        self._coords = self.__rotate()
+        self.__coords = self.__rotate()
     
     def rotate_directions(self):
         rotated = self.__rotate()
