@@ -26,28 +26,29 @@ class Utility():
 
 
 class GameCanvas(Canvas):
+    def clean_line(self, boxes_to_delete):
+        for box in boxes_to_delete:
+            self.delete(box)
+        self.update()
+
+    def drop_boxes(self, boxes_to_drop):
+        for box in boxes_to_drop:
+            self.move(box, 0, Utility.BOX_SIZE)
+        self.update()
+
     def completed_lines(self, y_coords):
         cleaned_lines = 0
-        all_boxes_coords = [(self.coords(box)[0], self.coords(box)[3])
-                            for box in self.find_all()
-                            if self.coords(box)[3] in y_coords]
-        
+        y_coords = sorted(y_coords)
         for y in y_coords:
-            if all( (x, y) in all_boxes_coords for x in range(10, Utility.GAME_WIDTH - 10, Utility.BOX_SIZE) ):
-                # Clear line
-                boxes_to_delete = [box
-                                   for box in self.find_all()
-                                   if self.coords(box)[3] == y]
-                for box in boxes_to_delete:
-                    self.delete(box)
-
-                # Drop boxes
-                boxes_to_drop = [box
+            if sum(1 for box in self.find_all() if self.coords(box)[3] == y) == \
+               ((Utility.GAME_WIDTH - 20) // Utility.BOX_SIZE):
+                self.clean_line([box
+                                for box in self.find_all()
+                                if self.coords(box)[3] == y])
+                
+                self.drop_boxes([box
                                  for box in self.find_all()
-                                 if self.coords(box)[3] < y]
-                for box in boxes_to_drop:
-                    self.move(box, 0, Utility.BOX_SIZE)
-
+                                 if self.coords(box)[3] < y])
                 cleaned_lines += 1
         return cleaned_lines
 
@@ -85,36 +86,6 @@ class Piece():
                  new_original[1] + coord[0]) for coord in self.__piece]
 
 
-# Just a small, wtf does Square do and what does Box do? Maybe just don't get you here :p
-class Box():
-    def __init__(self, canvas, coord, tag = -1):
-        self.__canvas = canvas
-        self.__tag = tag
-        if tag < 0:
-            self.__tag = self.__draw_on_canvas(coord)
-
-    @property
-    def coords(self):
-        return self.__canvas.coords(self.__tag)
-
-    @property
-    def tag(self):
-        return self.__tag
-        
-    def move(self, movement):
-        moved_x, moved_y = movement
-        self.__canvas.move(self.__tag,
-                           moved_x,
-                           moved_y)
-
-    def __draw_on_canvas(self, coord):
-        x_left, y_up, x_right, y_down = coord
-        return self.__canvas.create_rectangle(x_left,
-                                              y_up,
-                                              x_right,
-                                              y_down,
-                                              fill="blue")
-
 class Square():
     def __init__(self, canvas, start_point, piece = None):
         self.piece = piece
@@ -124,30 +95,35 @@ class Square():
         self.boxes = self.__create_boxes(start_point)
 
     def move(self, direction):
-        if all(self.__can_move(box.coords, direction) for box in self.boxes):
+        if all(self.__can_move(self.canvas.coords(box), direction) for box in self.boxes):
             x, y = direction
             for box in self.boxes:
-                box.move((x * Utility.BOX_SIZE, y * Utility.BOX_SIZE))
+                self.canvas.move(box,
+                                 x * Utility.BOX_SIZE,
+                                 y * Utility.BOX_SIZE)
             return True
         return False
 
     def rotate(self):
         directions = self.piece.rotate_directions()
-        if all(self.__can_move(self.boxes[i].coords, directions[i]) for i in range(len(self.boxes))):
+        if all(self.__can_move(self.canvas.coords(self.boxes[i]), directions[i]) for i in range(len(self.boxes))):
             self.piece.rotate()
             for i in range(len(self.boxes)):
                 x, y = directions[i]
-                self.boxes[i].move((x * Utility.BOX_SIZE, y * Utility.BOX_SIZE))
+                self.canvas.move(self.boxes[i],
+                                 x * Utility.BOX_SIZE,
+                                 y * Utility.BOX_SIZE)
 
     def __create_boxes(self, start_point):
         boxes = []
         for coord in self.piece.coords:
             x, y = coord
-            box_coord = (x * Utility.BOX_SIZE + start_point,
-                         y * Utility.BOX_SIZE,
-                         x * Utility.BOX_SIZE + Utility.BOX_SIZE + start_point,
-                         y * Utility.BOX_SIZE + Utility.BOX_SIZE)
-            boxes += [Box(self.canvas, box_coord)]
+            box = self.canvas.create_rectangle(x * Utility.BOX_SIZE + start_point,
+                                               y * Utility.BOX_SIZE,
+                                               x * Utility.BOX_SIZE + Utility.BOX_SIZE + start_point,
+                                               y * Utility.BOX_SIZE + Utility.BOX_SIZE,
+                                               fill="blue")
+            boxes += [box]
 
         return boxes
 
@@ -161,7 +137,7 @@ class Square():
                                                    (y_up + y_down) / 2 + y, 
                                                    (x_left + x_right) / 2 + x,
                                                    (y_up + y_down) / 2 + y))
-        other_items = set(self.canvas.find_all()) - set([box.tag for box in self.boxes])
+        other_items = set(self.canvas.find_all()) - set(self.boxes)
 
         if y_down + y > Utility.GAME_HEIGHT or \
            x_left + x < 0 or \
@@ -206,10 +182,6 @@ class Tetris():
         self._blockcount = blockcount
 
     def __init__(self):
-        self.level = 1
-        self.score = 0
-        self.blockcount = 0
-        self.speed = 500
         self.root = Tk()
         self.root.geometry("500x550") 
         self.root.title('Tetris')
@@ -234,20 +206,29 @@ class Tetris():
 
     # Is this after a Pause? Or a new_game?
     def new_game(self):
+        self.level = 1
         self.score = 0
         self.blockcount = 0
-        self.level = 1
+        self.speed = 500
 
         self.canvas.delete("all")
         self.next_canvas.delete("all")
+        
+        self.current_square = None
+        self.next_square = None
+
+        self.update_square()
+
+    def update_square(self):
+        if not self.next_square:
+            self.next_square = Square(self.next_canvas, 0)
+
+        self.current_square = Square(self.canvas, Utility.GAME_START_POINT, self.next_square.piece)
+        self.next_canvas.delete("all")
+        self.next_square = Square(self.next_canvas, 0)
 
     def start(self):
         self.new_game()
-
-        self.current_square = Square(self.canvas, Utility.GAME_START_POINT)
-        self.next_square = Square(self.next_canvas, 0)
-
-        self.canvas.update()
         self.root.after(self.speed, None)
         self.drop()
         self.root.mainloop()
@@ -255,11 +236,7 @@ class Tetris():
     def drop(self):
         if not self.current_square.move((0,1)):
             self.completed_lines()
-
-            self.current_square = Square(self.canvas, Utility.GAME_START_POINT, self.next_square.piece)
-            self.next_canvas.delete("all")
-            self.next_square = Square(self.next_canvas, 0)
-
+            self.update_square()
             if self.is_game_over():
                 return 
 
@@ -289,9 +266,8 @@ class Tetris():
         self.root.quit()     
 
     def completed_lines(self):
-        y_coords = [box.coords[3] for box in self.current_square.boxes]
+        y_coords = [self.canvas.coords(box)[3] for box in self.current_square.boxes]
         self.score += self.canvas.completed_lines(y_coords)
-        
 
     def __game_canvas(self):
         self.canvas = GameCanvas(self.root, 
