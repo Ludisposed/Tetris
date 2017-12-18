@@ -36,6 +36,8 @@ class GameCanvas(Canvas):
             x, y, _, _ = self.coords(box)
             board[int(y // Tetris.BOX_SIZE)][int(x // Tetris.BOX_SIZE)] = 1
         return board
+    def boxes(self):
+        return self.find_all() == self.find_withtag(fill="blue")
 
 
 
@@ -85,11 +87,11 @@ class Piece():
             self.__shape = Shape()
         self.canvas = canvas
         self.boxes = self.__create_boxes(start_point)
+        self.predict_boxes = []
     
     @property
     def shape(self):
         return self.__shape
-
     
     
     def move(self, direction):
@@ -112,9 +114,29 @@ class Piece():
                                  x * Tetris.BOX_SIZE,
                                  y * Tetris.BOX_SIZE)
 
-    def drop(self, board):
-        offset = min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes)
-        return self.shape.drop(board, offset)
+    @property
+    def offset(self):
+        return min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes)
+    
+    def predict_drop(self, board):
+        print(self.offset)
+        level = self.shape.drop(board, self.offset)
+        self.remove_predicts()
+        for coord in self.__shape.coords:
+            x, y = coord
+            box = self.canvas.create_rectangle((x + self.offset) * Tetris.BOX_SIZE + 10,
+                                               (y + level) * Tetris.BOX_SIZE,
+                                               (x + self.offset + 1) * Tetris.BOX_SIZE + 10,
+                                               (y + level + 1) * Tetris.BOX_SIZE,
+                                               fill="yellow")
+            self.predict_boxes += [box]
+
+    def remove_predicts(self):
+        for box in self.predict_boxes:
+            self.canvas.delete(box)
+        self.canvas.update()
+        self.predict_boxes = []
+
 
     def __create_boxes(self, start_point):
         boxes = []
@@ -205,8 +227,6 @@ class Tetris():
         self.__level_score_label()
         self.__next_piece_canvas()
 
-        
-
     def game_control(self, event):
         if event.char in ["a", "A", "\uf702"]:
             self.current_piece.move((-1, 0))
@@ -255,6 +275,10 @@ class Tetris():
         
     def drop(self):
         if not self.current_piece.move((0,1)):
+            if self.current_piece.predict_boxes != []:
+                self.current_piece.remove_predicts()
+                self.root.after(self.speed, self.drop)
+                return 
             self.game_board = self.canvas.game_board()
             self.completed_lines()
             self.update_piece()
@@ -262,7 +286,7 @@ class Tetris():
                 return 
 
             self.blockcount += 1
-        print(self.current_piece.drop(self.game_board))
+        self.current_piece.predict_drop(self.game_board)
         self.root.after(self.speed, self.drop)
 
     def update_status(self):        
