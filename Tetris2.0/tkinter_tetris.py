@@ -17,14 +17,14 @@ class GameCanvas(Canvas):
         cleaned_lines = 0
         y_coords = sorted(y_coords)
         for y in y_coords:
-            if sum(1 for box in self.find_all() if self.coords(box)[3] == y) == \
+            if sum(1 for box in self.find_withtag('game') if self.coords(box)[3] == y) == \
                ((Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE):
                 self.clean_line([box
-                                for box in self.find_all()
+                                for box in self.find_withtag('game')
                                 if self.coords(box)[3] == y])
                 
                 self.drop_boxes([box
-                                 for box in self.find_all()
+                                 for box in self.find_withtag('game')
                                  if self.coords(box)[3] < y])
                 cleaned_lines += 1
         return cleaned_lines
@@ -32,12 +32,12 @@ class GameCanvas(Canvas):
     def game_board(self):
         board = [[0] * ((Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE)\
                  for _ in range(Tetris.GAME_HEIGHT // Tetris.BOX_SIZE)]
-        for box in self.find_all():
+        for box in self.find_withtag('game'):
             x, y, _, _ = self.coords(box)
             board[int(y // Tetris.BOX_SIZE)][int(x // Tetris.BOX_SIZE)] = 1
         return board
     def boxes(self):
-        return self.find_all() == self.find_withtag(fill="blue")
+        return self.find_withtag('game') == self.find_withtag(fill="blue")
 
 
 
@@ -149,7 +149,8 @@ class Piece():
                                                y * Tetris.BOX_SIZE,
                                                x * Tetris.BOX_SIZE + Tetris.BOX_SIZE + start_point,
                                                y * Tetris.BOX_SIZE + Tetris.BOX_SIZE,
-                                               fill="blue")
+                                               fill="blue",
+                                               tags="game")
             boxes += [box]
 
         return boxes
@@ -164,7 +165,7 @@ class Piece():
                                                    (y_up + y_down) / 2 + y, 
                                                    (x_left + x_right) / 2 + x,
                                                    (y_up + y_down) / 2 + y))
-        other_items = set(self.canvas.find_all()) - set(self.boxes)
+        other_items = set(self.canvas.find_withtag('game')) - set(self.boxes)
 
         if y_down + y > Tetris.GAME_HEIGHT or \
            x_left + x < 0 or \
@@ -233,18 +234,16 @@ class Tetris():
     def game_control(self, event):
         if event.char in ["a", "A", "\uf702"]:
             self.current_piece.move((-1, 0))
+            self.update_predict()
         elif event.char in ["d", "D", "\uf703"]:
             self.current_piece.move((1, 0))
-        # Hard drop left for now, I wanna do it different...
-        # 1. Have a mirror piece, (What the piece will look like, if you do the "hard drop")
-        # 2. When "Hard Drop" is pressed, Fill the mirror piece and delete the old one. No more clunky speed things :)
-        # 
-        # elif event.char in ["s", "S", "\uf701"]:
-        #     self.hard_drop()
+            self.update_predict()
+        elif event.char in ["s", "S", "\uf701"]:
+            self.hard_drop()
         elif event.char in ["w", "W", "\uf700"]:
             self.current_piece.rotate()
+            self.update_predict()
 
-    # Is this after a Pause? Or a new_game?
     def new_game(self):
         self.level = 1
         self.score = 0
@@ -257,10 +256,12 @@ class Tetris():
         self.current_piece = None
         self.next_piece = None
 
-        self.update_piece()
+        
 
         self.game_board = [[0] * ((Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE)\
                            for _ in range(Tetris.GAME_HEIGHT // Tetris.BOX_SIZE)]
+
+        self.update_piece()
 
     def update_piece(self):
         if not self.next_piece:
@@ -269,6 +270,7 @@ class Tetris():
         self.current_piece = Piece(self.canvas, Tetris.GAME_START_POINT, self.next_piece.shape)
         self.next_canvas.delete("all")
         self.next_piece = Piece(self.next_canvas, 0)
+        self.update_predict()
 
     def start(self):
         self.new_game()
@@ -278,10 +280,7 @@ class Tetris():
         
     def drop(self):
         if not self.current_piece.move((0,1)):
-            if self.current_piece.predict_boxes != []:
-                self.current_piece.remove_predicts()
-                self.root.after(self.speed, self.drop)
-                return
+            self.current_piece.remove_predicts()
             self.game_board = self.canvas.game_board()
             self.completed_lines()
             self.update_piece()
@@ -289,9 +288,13 @@ class Tetris():
                 return 
 
             self.blockcount += 1
-        self.current_piece.predict_drop(self.game_board)
+        
         self.root.after(self.speed, self.drop)
+    def hard_drop(self):
+        pass
 
+    def update_predict(self):
+        self.current_piece.predict_drop(self.game_board)
     def update_status(self):        
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
         self.status.update()
