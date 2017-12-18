@@ -28,17 +28,15 @@ class GameCanvas(Canvas):
                                  if self.coords(box)[3] < y])
                 cleaned_lines += 1
         return cleaned_lines
-    def board_info(self):
-        height = 500
-        [self.coords(box)[:2] for box in self.find_all()]
+    
+    def game_board(self):
+        board = [[0] * (Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE\
+                 for _ in range(Tetris.GAME_HEIGHT // Tetris.BOX_SIZE)]
+        for box in self.find_all():
+            x, y, _, _ = self.coords(box)
+            board[int(y // Tetris.BOX_SIZE)][int(x // Tetris.BOX_SIZE)] = 1
+        return board
 
-"""
-Do these properties also need setters?
-
-    @coords.setter
-    def coords(self, value):
-        self.__piece = value
-"""
 
 class Shape():
     def __init__(self):
@@ -131,7 +129,6 @@ class Piece():
         return True        
 
 
-# I broke the Label with this, but this is more how properties work ^^
 class Tetris():
     SHAPES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
               [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
@@ -207,7 +204,7 @@ class Tetris():
         self.level = 1
         self.score = 0
         self.blockcount = 0
-        self.speed = 500
+        self.speed = 10
 
         self.canvas.delete("all")
         self.next_canvas.delete("all")
@@ -233,6 +230,7 @@ class Tetris():
         
     def drop(self):
         if not self.current_piece.move((0,1)):
+            print(self.canvas.game_board())
             self.completed_lines()
             self.update_piece()
             if self.is_game_over():
