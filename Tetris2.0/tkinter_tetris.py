@@ -30,7 +30,7 @@ class GameCanvas(Canvas):
         return cleaned_lines
     
     def game_board(self):
-        board = [[0] * (Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE\
+        board = [[0] * ((Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE)\
                  for _ in range(Tetris.GAME_HEIGHT // Tetris.BOX_SIZE)]
         for box in self.find_all():
             x, y, _, _ = self.coords(box)
