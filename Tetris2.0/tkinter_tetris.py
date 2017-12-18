@@ -2,29 +2,6 @@ from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
 
 
-"""
-I Althered the code a bit on som places, broke a few on others :p
-
-Other then that, great work on the refractor ^^
-"""
-
-# Idk if I like this bare Classes, Too Javaish?
-class Utility():
-    SHAPES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
-              [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
-              [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
-              [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
-              [(0, 1), (1, 1), (1, 0), (2, 0)],     # Right Z
-              [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
-              [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
-
-    BOX_SIZE = 20
-
-    GAME_WIDTH = 300
-    GAME_HEIGHT = 500
-    GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
-
-
 class GameCanvas(Canvas):
     def clean_line(self, boxes_to_delete):
         for box in boxes_to_delete:
@@ -33,7 +10,7 @@ class GameCanvas(Canvas):
 
     def drop_boxes(self, boxes_to_drop):
         for box in boxes_to_drop:
-            self.move(box, 0, Utility.BOX_SIZE)
+            self.move(box, 0, Tetris.BOX_SIZE)
         self.update()
 
     def completed_lines(self, y_coords):
@@ -41,7 +18,7 @@ class GameCanvas(Canvas):
         y_coords = sorted(y_coords)
         for y in y_coords:
             if sum(1 for box in self.find_all() if self.coords(box)[3] == y) == \
-               ((Utility.GAME_WIDTH - 20) // Utility.BOX_SIZE):
+               ((Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE):
                 self.clean_line([box
                                 for box in self.find_all()
                                 if self.coords(box)[3] == y])
@@ -51,6 +28,9 @@ class GameCanvas(Canvas):
                                  if self.coords(box)[3] < y])
                 cleaned_lines += 1
         return cleaned_lines
+    def board_info(self):
+        height = 500
+        [self.coords(box)[:2] for box in self.find_all()]
 
 """
 Do these properties also need setters?
@@ -62,7 +42,7 @@ Do these properties also need setters?
 
 class Shape():
     def __init__(self):
-        self.__coords = choice(Utility.SHAPES)
+        self.__coords = choice(Tetris.SHAPES)
 
     @property
     def coords(self):
@@ -103,8 +83,8 @@ class Piece():
             x, y = direction
             for box in self.boxes:
                 self.canvas.move(box,
-                                 x * Utility.BOX_SIZE,
-                                 y * Utility.BOX_SIZE)
+                                 x * Tetris.BOX_SIZE,
+                                 y * Tetris.BOX_SIZE)
             return True
         return False
 
@@ -115,17 +95,17 @@ class Piece():
             for i in range(len(self.boxes)):
                 x, y = directions[i]
                 self.canvas.move(self.boxes[i],
-                                 x * Utility.BOX_SIZE,
-                                 y * Utility.BOX_SIZE)
+                                 x * Tetris.BOX_SIZE,
+                                 y * Tetris.BOX_SIZE)
 
     def __create_boxes(self, start_point):
         boxes = []
         for coord in self.__shape.coords:
             x, y = coord
-            box = self.canvas.create_rectangle(x * Utility.BOX_SIZE + start_point,
-                                               y * Utility.BOX_SIZE,
-                                               x * Utility.BOX_SIZE + Utility.BOX_SIZE + start_point,
-                                               y * Utility.BOX_SIZE + Utility.BOX_SIZE,
+            box = self.canvas.create_rectangle(x * Tetris.BOX_SIZE + start_point,
+                                               y * Tetris.BOX_SIZE,
+                                               x * Tetris.BOX_SIZE + Tetris.BOX_SIZE + start_point,
+                                               y * Tetris.BOX_SIZE + Tetris.BOX_SIZE,
                                                fill="blue")
             boxes += [box]
 
@@ -133,8 +113,8 @@ class Piece():
 
     def __can_move(self, box_coords, new_pos):
         x, y = new_pos
-        x = x * Utility.BOX_SIZE
-        y = y * Utility.BOX_SIZE
+        x = x * Tetris.BOX_SIZE
+        y = y * Tetris.BOX_SIZE
         x_left, y_up, x_right, y_down = box_coords
 
         overlap = set(self.canvas.find_overlapping((x_left + x_right) / 2 + x, 
@@ -143,9 +123,9 @@ class Piece():
                                                    (y_up + y_down) / 2 + y))
         other_items = set(self.canvas.find_all()) - set(self.boxes)
 
-        if y_down + y > Utility.GAME_HEIGHT or \
+        if y_down + y > Tetris.GAME_HEIGHT or \
            x_left + x < 0 or \
-           x_right + x > Utility.GAME_WIDTH or \
+           x_right + x > Tetris.GAME_WIDTH or \
            overlap & other_items:
             return False
         return True        
@@ -153,6 +133,20 @@ class Piece():
 
 # I broke the Label with this, but this is more how properties work ^^
 class Tetris():
+    SHAPES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
+              [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
+              [(2, 0), (0, 1), (1, 1), (2, 1)],     # Right L
+              [(0, 0), (0, 1), (1, 1), (2, 1)],     # Left L
+              [(0, 1), (1, 1), (1, 0), (2, 0)],     # Right Z
+              [(0, 0), (1, 0), (1, 1), (2, 1)],     # Left Z
+              [(1, 0), (0, 1), (1, 1), (2, 1)])     # T
+
+    BOX_SIZE = 20
+
+    GAME_WIDTH = 300
+    GAME_HEIGHT = 500
+    GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
+
     @property
     def level(self):
         return self._level
@@ -227,7 +221,7 @@ class Tetris():
         if not self.next_piece:
             self.next_piece = Piece(self.next_canvas, 0)
 
-        self.current_piece = Piece(self.canvas, Utility.GAME_START_POINT, self.next_piece.shape)
+        self.current_piece = Piece(self.canvas, Tetris.GAME_START_POINT, self.next_piece.shape)
         self.next_canvas.delete("all")
         self.next_piece = Piece(self.next_canvas, 0)
 
@@ -256,8 +250,8 @@ class Tetris():
         if not self.current_piece.move((0,1)):
             self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
             self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
-            self.play_again_btn.place(x = Utility.GAME_WIDTH + 10, y = 200, width=100, height=25)
-            self.quit_btn.place(x = Utility.GAME_WIDTH + 10, y = 300, width=100, height=25)
+            self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)
+            self.quit_btn.place(x = Tetris.GAME_WIDTH + 10, y = 300, width=100, height=25)
             return True
         return False
 
@@ -275,8 +269,8 @@ class Tetris():
 
     def __game_canvas(self):
         self.canvas = GameCanvas(self.root, 
-                             width = Utility.GAME_WIDTH, 
-                             height = Utility.GAME_HEIGHT)
+                             width = Tetris.GAME_WIDTH, 
+                             height = Tetris.GAME_HEIGHT)
         self.canvas.pack(padx=5 , pady=10, side=LEFT)
 
     def __level_score_label(self):
@@ -284,7 +278,7 @@ class Tetris():
         self.status = Label(self.root, 
                             textvariable=self.status_var, 
                             font=("Helvetica", 10, "bold"))
-        self.status.place(x = Utility.GAME_WIDTH + 10, y = 100, width=100, height=25)
+        self.status.place(x = Tetris.GAME_WIDTH + 10, y = 100, width=100, height=25)
 
     def __next_piece_canvas(self):
         self.next_canvas = Canvas(self.root,
