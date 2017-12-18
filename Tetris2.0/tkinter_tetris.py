@@ -62,7 +62,7 @@ class Shape():
 
     def matrix(self):
         return [[1 if (j, i) in self.__coords else 0 \
-                 for j in range(max(self.__coords, key=lambda x:x[0])[0] + 1)] \
+                 for j in range(max(self.__coords, key=lambda x: x[0])[0] + 1)] \
                  for i in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]
 
     def drop(self, board, offset):
@@ -78,8 +78,13 @@ class Shape():
         max_x = max(self.__coords, key=lambda x:x[0])[0]
         new_original = (max_x, 0)
 
-        return [(new_original[0] - coord[1],
-                 new_original[1] + coord[0]) for coord in self.__coords]
+        rotated = [(new_original[0] - coord[1],
+                    new_original[1] + coord[0]) for coord in self.__coords]
+
+        min_x = min(rotated, key=lambda x:x[0])[0]
+        min_y = min(rotated, key=lambda x:x[1])[1]
+
+        return [(coord[0] - min_x, coord[1] - min_y) for coord in rotated]
 
 
 class Piece():
@@ -107,6 +112,7 @@ class Piece():
         return False
 
     def rotate(self):
+        
         directions = self.__shape.rotate_directions()
         if all(self.__can_move(self.canvas.coords(self.boxes[i]), directions[i]) for i in range(len(self.boxes))):
             self.__shape.rotate()
@@ -121,7 +127,8 @@ class Piece():
         return min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes)
     
     def predict_drop(self, board):
-        level = self.shape.drop(board, self.offset)
+
+        level = self.__shape.drop(board, self.offset)
         self.remove_predicts()
 
         min_y = min([self.canvas.coords(box)[1] for box in self.boxes])
