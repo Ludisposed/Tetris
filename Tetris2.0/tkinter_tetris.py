@@ -39,9 +39,6 @@ class GameCanvas(Canvas):
     def boxes(self):
         return self.find_withtag('game') == self.find_withtag(fill="blue")
 
-
-
-
 class Shape():
     def __init__(self):
         self.__coords = choice(Tetris.SHAPES)
@@ -86,7 +83,6 @@ class Shape():
 
         return [(coord[0] - min_x, coord[1] - min_y) for coord in rotated]
 
-
 class Piece():
     def __init__(self, canvas, start_point, shape = None):
         self.__shape = shape
@@ -126,8 +122,12 @@ class Piece():
     def offset(self):
         return min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes)
     
-    def predict_drop(self, board):
+    def predict_movement(self, board):
+        level = self.__shape.drop(board, self.offset)
+        min_y = min([self.canvas.coords(box)[1] for box in self.boxes])
+        return (0, level - (min_y // Tetris.BOX_SIZE))
 
+    def predict_drop(self, board):
         level = self.__shape.drop(board, self.offset)
         self.remove_predicts()
 
@@ -298,7 +298,7 @@ class Tetris():
         
         self.root.after(self.speed, self.drop)
     def hard_drop(self):
-        pass
+        self.current_piece.move(self.current_piece.predict_movement(self.game_board))
 
     def update_predict(self):
         self.current_piece.predict_drop(self.game_board)
