@@ -60,15 +60,17 @@ class Shape():
 
         return directions
 
+    def matrix(self):
+        return [[1 if (j, i) in self.__coords else 0 \
+                 for j in range(max(self.__coords, key=lambda x:x[0])[0] + 1)] \
+                 for i in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]
+
     def drop(self, board, offset):
-        shape = [[1 if (i, j) in self.__coords else 0 \
-                 for j in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]\
-                 for i in range(max(self.__coords, key=lambda x: x[0])[0] + 1)]
-        last_level = len(board) - len(shape) + 1
+        last_level = len(board) - len(self.matrix()) + 1
         for level in range(last_level):
-            for i in range(len(shape)):
-                for j in range(len(shape[0])):
-                    if board[level+i][offset+j] == 1 and shape[i][j] == 1:
+            for i in range(len(self.matrix())):
+                for j in range(len(self.matrix()[0])):
+                    if board[level+i][offset+j] == 1 and self.matrix()[i][j] == 1:
                         return level - 1
         return last_level - 1
 
@@ -119,15 +121,16 @@ class Piece():
         return min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes)
     
     def predict_drop(self, board):
-        print(self.offset)
         level = self.shape.drop(board, self.offset)
         self.remove_predicts()
-        for coord in self.__shape.coords:
-            x, y = coord
-            box = self.canvas.create_rectangle((x + self.offset) * Tetris.BOX_SIZE + 10,
-                                               (y + level) * Tetris.BOX_SIZE,
-                                               (x + self.offset + 1) * Tetris.BOX_SIZE + 10,
-                                               (y + level + 1) * Tetris.BOX_SIZE,
+
+        min_y = min([self.canvas.coords(box)[1] for box in self.boxes])
+        for box in self.boxes:
+            x1, y1, x2, y2 = self.canvas.coords(box)
+            box = self.canvas.create_rectangle(x1,
+                                               level * Tetris.BOX_SIZE + (y1 - min_y),
+                                               x2,
+                                               (level + 1) * Tetris.BOX_SIZE + (y1 - min_y),
                                                fill="yellow")
             self.predict_boxes += [box]
 
@@ -278,7 +281,7 @@ class Tetris():
             if self.current_piece.predict_boxes != []:
                 self.current_piece.remove_predicts()
                 self.root.after(self.speed, self.drop)
-                return 
+                return
             self.game_board = self.canvas.game_board()
             self.completed_lines()
             self.update_piece()
