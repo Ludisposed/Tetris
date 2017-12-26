@@ -1,6 +1,81 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
 
+class AIPlayer():
+    holes = -1
+    ralative_height = -2
+    rows_complete = 10
+    roughness = -1
+    weighted_height = -1
+    sum_heights = -1
+
+    @staticmethod
+    def drop(shape, board, offset):
+        off_x, off_y = offset
+        last_level = len(board) - len(shape) + 1
+        for level in range(off_y, last_level):
+            for i in range(len(shape)):
+                for j in range(len(shape[0])):
+                    if board[level+i][off_x+j] == 1 and shape[i][j] == 1:
+                        return level - 1
+        return last_level - 1
+
+    @staticmethod
+    def find_best_choice(shape, board):
+        score = []
+        for rotation in range(4):
+            for offx in range(len(board[0]) - len(shape[0]) + 1):
+                level = AIPlayer.drop(shape, board, (offx, 0))
+                score += [[AIPlayer.score_for_choice(AIPlayer.place_shape(shape, board, (level, offx))), rotation]]
+            shape = AIPlayer.rotate(shape)
+        max_score = max(score, key = lambda x: x[0])
+        return score.index(max_score), max_score[1]
+
+    @staticmethod
+    def place_shape(shape, board, pos):
+        board_ = [row[:] for row in board]
+        level, offx = pos
+        for i in range(len(shape)):
+            for j in range(len(shape[0])):
+                if shape[i][j] == 1:
+                    board_[level+i][offx+j] = shape[i][j]
+        return board_
+
+    @staticmethod
+    def rotate(shape):
+        return [row[::-1] for row in zip(*shape)]
+    
+    @staticmethod
+    def completed_line(board):
+        for i, line in enumerate(board):
+            if line.count(0) == 0:
+                yield i
+
+    @staticmethod
+    def score_for_choice(board):
+        complete_line = 0
+        for i in AIPlayer.completed_line(board):
+            del board[i]
+            board.insert(0, [0 for _ in range(len(board[0]))])
+            complete_line += 1
+
+        rotate_board = [row for row in zip(*board)]
+        holes = 0
+        heights = [0 for _ in range(len(rotate_board))]
+        
+        for idx, row in enumerate(rotate_board):
+            if row.count(1) > 0:
+                holes += len(row) - row.index(1) - sum(row)
+                heights[idx] = len(row) - row.index(1)
+        
+        return holes * AIPlayer.holes + \
+               (max(heights) - min(heights)) * AIPlayer.ralative_height + \
+               complete_line * AIPlayer.rows_complete + \
+               (max(heights) - (sum(heights) // len(heights))) * AIPlayer.roughness + \
+               max(heights) * AIPlayer.weighted_height + \
+               sum(heights) * AIPlayer.sum_heights
+
+
 
 class GameCanvas(Canvas):
     def clean_line(self, boxes_to_delete):
@@ -40,8 +115,11 @@ class GameCanvas(Canvas):
         return self.find_withtag('game') == self.find_withtag(fill="blue")
 
 class Shape():
-    def __init__(self):
-        self.__coords = choice(Tetris.SHAPES)
+    def __init__(self, coords = None):
+        if not coords:
+            self.__coords = choice(Tetris.SHAPES)
+        else:
+            self.__coords = coords
 
     @property
     def coords(self):
@@ -57,20 +135,14 @@ class Shape():
 
         return directions
 
+    @property
     def matrix(self):
         return [[1 if (j, i) in self.__coords else 0 \
                  for j in range(max(self.__coords, key=lambda x: x[0])[0] + 1)] \
                  for i in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]
 
     def drop(self, board, offset):
-        off_x, off_y = offset
-        last_level = len(board) - len(self.matrix()) + 1
-        for level in range(off_y, last_level):
-            for i in range(len(self.matrix())):
-                for j in range(len(self.matrix()[0])):
-                    if board[level+i][off_x+j] == 1 and self.matrix()[i][j] == 1:
-                        return level - 1
-        return last_level - 1
+        return AIPlayer.drop(self.matrix, board, offset)  
 
     def __rotate(self):
         max_x = max(self.__coords, key=lambda x:x[0])[0]
@@ -203,7 +275,9 @@ class Tetris():
         self._level = 1
         self._score = 0
         self._blockcount = 0
-        self.speed = 500
+        self.speed = 10
+        self.predictable = False
+        self.ai = True
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -212,6 +286,15 @@ class Tetris():
         self.__game_canvas()
         self.__level_score_label()
         self.__next_piece_canvas()
+
+    
+    def ai_player(self):
+        if self.ai:
+            best_offx_choice, rotate = AIPlayer.find_best_choice(self.current_piece.shape.matrix, self.game_board)
+            for i in range(rotate):
+                self.current_piece.rotate()
+            self.current_piece.move((best_offx_choice - self.current_piece.offset[0],0))
+            #self.hard_drop()
 
     def game_control(self, event):
         if event.char in ["a", "A", "\uf702"]:
@@ -230,7 +313,7 @@ class Tetris():
         self.level = 1
         self.score = 0
         self.blockcount = 0
-        self.speed = 500
+        self.speed = 10
 
         self.canvas.delete("all")
         self.next_canvas.delete("all")
@@ -254,7 +337,12 @@ class Tetris():
         self.next_canvas.delete("all")
         self.__draw_next_canvas_frame()
         self.next_piece = Piece(self.next_canvas, (20,20))
+
+        self.ai_player()
+
         self.update_predict()
+
+        
 
     def start(self):
         self.new_game()
@@ -280,7 +368,8 @@ class Tetris():
         self.current_piece.move(self.current_piece.predict_movement(self.game_board))
 
     def update_predict(self):
-        self.current_piece.predict_drop(self.game_board)
+        if self.predictable:
+            self.current_piece.predict_drop(self.game_board)
 
     def update_status(self):
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
