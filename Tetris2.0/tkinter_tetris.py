@@ -63,11 +63,12 @@ class Shape():
                  for i in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]
 
     def drop(self, board, offset):
+        off_x, off_y = offset
         last_level = len(board) - len(self.matrix()) + 1
-        for level in range(last_level):
+        for level in range(off_y, last_level):
             for i in range(len(self.matrix())):
                 for j in range(len(self.matrix()[0])):
-                    if board[level+i][offset+j] == 1 and self.matrix()[i][j] == 1:
+                    if board[level+i][off_x+j] == 1 and self.matrix()[i][j] == 1:
                         return level - 1
         return last_level - 1
 
@@ -90,7 +91,6 @@ class Piece():
             self.__shape = Shape()
         self.canvas = canvas
         self.boxes = self.__create_boxes(start_point)
-        self.predict_boxes = []
     
     @property
     def shape(self):
@@ -120,7 +120,8 @@ class Piece():
 
     @property
     def offset(self):
-        return min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes)
+        return (min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes),
+                min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes))
     
     def predict_movement(self, board):
         level = self.__shape.drop(board, self.offset)
@@ -138,24 +139,24 @@ class Piece():
                                                level * Tetris.BOX_SIZE + (y1 - min_y),
                                                x2,
                                                (level + 1) * Tetris.BOX_SIZE + (y1 - min_y),
-                                               fill="yellow")
-            self.predict_boxes += [box]
+                                               fill="yellow",
+                                               tags = "predict")
 
     def remove_predicts(self):
-        for box in self.predict_boxes:
-            self.canvas.delete(box)
+        for i in self.canvas.find_withtag('predict'):
+            self.canvas.delete(i) 
         self.canvas.update()
-        self.predict_boxes = []
 
 
     def __create_boxes(self, start_point):
         boxes = []
+        off_x, off_y = start_point
         for coord in self.__shape.coords:
             x, y = coord
-            box = self.canvas.create_rectangle(x * Tetris.BOX_SIZE + start_point,
-                                               y * Tetris.BOX_SIZE,
-                                               x * Tetris.BOX_SIZE + Tetris.BOX_SIZE + start_point,
-                                               y * Tetris.BOX_SIZE + Tetris.BOX_SIZE,
+            box = self.canvas.create_rectangle(x * Tetris.BOX_SIZE + off_x,
+                                               y * Tetris.BOX_SIZE + off_y,
+                                               x * Tetris.BOX_SIZE + Tetris.BOX_SIZE + off_x,
+                                               y * Tetris.BOX_SIZE + Tetris.BOX_SIZE + off_y,
                                                fill="blue",
                                                tags="game")
             boxes += [box]
@@ -197,39 +198,13 @@ class Tetris():
     GAME_HEIGHT = 500
     GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
 
-    @property
-    def level(self):
-        return self._level
-
-    @level.setter
-    def level(self, level):
-        self._level = level
-
-    @property
-    def speed(self):
-        return self._speed
-
-    @speed.setter
-    def speed(self, speed):
-        self._speed = speed
-
-    @property
-    def score(self):
-        return self._score
-
-    @score.setter
-    def score(self, score):
-        self._score = score
-
-    @property
-    def blockcount(self):
-        return self._blockcount
-
-    @blockcount.setter
-    def blockcount(self, blockcount):
-        self._blockcount = blockcount
-
+    
     def __init__(self):
+        self._level = 1
+        self._score = 0
+        self._blockcount = 0
+        self.speed = 500
+
         self.root = Tk()
         self.root.geometry("500x550") 
         self.root.title('Tetris')
@@ -260,6 +235,9 @@ class Tetris():
         self.canvas.delete("all")
         self.next_canvas.delete("all")
         
+        self.__draw_canvas_frame()
+        self.__draw_next_canvas_frame()
+
         self.current_piece = None
         self.next_piece = None        
 
@@ -270,11 +248,12 @@ class Tetris():
 
     def update_piece(self):
         if not self.next_piece:
-            self.next_piece = Piece(self.next_canvas, 0)
+            self.next_piece = Piece(self.next_canvas, (20,20))
 
-        self.current_piece = Piece(self.canvas, Tetris.GAME_START_POINT, self.next_piece.shape)
+        self.current_piece = Piece(self.canvas, (Tetris.GAME_START_POINT, 0), self.next_piece.shape)
         self.next_canvas.delete("all")
-        self.next_piece = Piece(self.next_canvas, 0)
+        self.__draw_next_canvas_frame()
+        self.next_piece = Piece(self.next_canvas, (20,20))
         self.update_predict()
 
     def start(self):
@@ -289,18 +268,22 @@ class Tetris():
             self.completed_lines()
             self.game_board = self.canvas.game_board()
             self.update_piece()
+
             if self.is_game_over():
                 return 
 
-            self.blockcount += 1
+            self._blockcount += 1
         
         self.root.after(self.speed, self.drop)
+
     def hard_drop(self):
         self.current_piece.move(self.current_piece.predict_movement(self.game_board))
 
     def update_predict(self):
         self.current_piece.predict_drop(self.game_board)
-    def update_status(self):        
+
+    def update_status(self):
+        print("update: {}, {}".format(self.level, self.score))
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
         self.status.update()
 
@@ -330,21 +313,56 @@ class Tetris():
                              width = Tetris.GAME_WIDTH, 
                              height = Tetris.GAME_HEIGHT)
         self.canvas.pack(padx=5 , pady=10, side=LEFT)
+        
+        
 
     def __level_score_label(self):
         self.status_var = StringVar()        
         self.status = Label(self.root, 
                             textvariable=self.status_var, 
                             font=("Helvetica", 10, "bold"))
-        self.status.place(x = Tetris.GAME_WIDTH + 10, y = 100, width=100, height=25)
-
+        #self.status.place(x = Tetris.GAME_WIDTH + 10, y = 100, width=100, height=25)
+        self.status.pack()
     def __next_piece_canvas(self):
         self.next_canvas = Canvas(self.root,
-                                 width = 60,
-                                 height = 60)
+                                 width = 100,
+                                 height = 100)
         self.next_canvas.pack(padx=5 , pady=10)
     
+    def __draw_canvas_frame(self):
+        self.canvas.create_line(10, 0, 10, self.GAME_HEIGHT, fill = "red", tags = "line")
+        self.canvas.create_line(self.GAME_WIDTH-10, 0, self.GAME_WIDTH-10, self.GAME_HEIGHT, fill = "red", tags = "line")
+        self.canvas.create_line(10, self.GAME_HEIGHT, self.GAME_WIDTH-10, self.GAME_HEIGHT, fill = "red", tags = "line")
+    
+    def __draw_next_canvas_frame(self):
+        self.next_canvas.create_rectangle(10, 10, 90, 90, tags="frame")
 
+    #set & get
+    def __get_level(self):
+        return self._level
+ 
+    def __set_level(self, level):
+        self.speed = 500 - (level - 1) * 25
+        self._level = level
+        self.update_status()
+ 
+    def __get_score(self):
+        return self._score
+ 
+    def __set_score(self, score):
+        self._score = score
+        self.update_status()
+ 
+    def __get_blockcount(self):
+        return self._blockcount
+ 
+    def __set_blockcount(self, blockcount):
+        self.level = blockcount // 5 + 1
+        self._blockcount = blockcount
+ 
+    level = property(__get_level, __set_level)
+    score = property(__get_score, __set_score)
+    blockcount = property(__get_blockcount, __set_blockcount)
 
 if __name__ == '__main__':
     game = Tetris()
