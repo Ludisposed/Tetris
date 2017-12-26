@@ -283,7 +283,6 @@ class Tetris():
         self.current_piece.predict_drop(self.game_board)
 
     def update_status(self):
-        print("update: {}, {}".format(self.level, self.score))
         self.status_var.set(f"Level: {self.level}, Score: {self.score}")
         self.status.update()
 
