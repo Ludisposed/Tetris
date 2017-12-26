@@ -261,9 +261,7 @@ class Tetris():
         self.next_canvas.delete("all")
         
         self.current_piece = None
-        self.next_piece = None
-
-        
+        self.next_piece = None        
 
         self.game_board = [[0] * ((Tetris.GAME_WIDTH - 20) // Tetris.BOX_SIZE)\
                            for _ in range(Tetris.GAME_HEIGHT // Tetris.BOX_SIZE)]
@@ -288,8 +286,8 @@ class Tetris():
     def drop(self):
         if not self.current_piece.move((0,1)):
             self.current_piece.remove_predicts()
-            self.game_board = self.canvas.game_board()
             self.completed_lines()
+            self.game_board = self.canvas.game_board()
             self.update_piece()
             if self.is_game_over():
                 return 
