@@ -1,81 +1,6 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
-
-class AIPlayer():
-    holes = -1
-    ralative_height = -2
-    rows_complete = 10
-    roughness = -1
-    weighted_height = -1
-    sum_heights = -1
-
-    @staticmethod
-    def drop(shape, board, offset):
-        off_x, off_y = offset
-        last_level = len(board) - len(shape) + 1
-        for level in range(off_y, last_level):
-            for i in range(len(shape)):
-                for j in range(len(shape[0])):
-                    if board[level+i][off_x+j] == 1 and shape[i][j] == 1:
-                        return level - 1
-        return last_level - 1
-
-    @staticmethod
-    def find_best_choice(shape, board):
-        score = []
-        for rotation in range(4):
-            for offx in range(len(board[0]) - len(shape[0]) + 1):
-                level = AIPlayer.drop(shape, board, (offx, 0))
-                score += [[AIPlayer.score_for_choice(AIPlayer.place_shape(shape, board, (level, offx))), rotation]]
-            shape = AIPlayer.rotate(shape)
-        max_score = max(score, key = lambda x: x[0])
-        return score.index(max_score), max_score[1]
-
-    @staticmethod
-    def place_shape(shape, board, pos):
-        board_ = [row[:] for row in board]
-        level, offx = pos
-        for i in range(len(shape)):
-            for j in range(len(shape[0])):
-                if shape[i][j] == 1:
-                    board_[level+i][offx+j] = shape[i][j]
-        return board_
-
-    @staticmethod
-    def rotate(shape):
-        return [row[::-1] for row in zip(*shape)]
-    
-    @staticmethod
-    def completed_line(board):
-        for i, line in enumerate(board):
-            if line.count(0) == 0:
-                yield i
-
-    @staticmethod
-    def score_for_choice(board):
-        complete_line = 0
-        for i in AIPlayer.completed_line(board):
-            del board[i]
-            board.insert(0, [0 for _ in range(len(board[0]))])
-            complete_line += 1
-
-        rotate_board = [row for row in zip(*board)]
-        holes = 0
-        heights = [0 for _ in range(len(rotate_board))]
-        
-        for idx, row in enumerate(rotate_board):
-            if row.count(1) > 0:
-                holes += len(row) - row.index(1) - sum(row)
-                heights[idx] = len(row) - row.index(1)
-        
-        return holes * AIPlayer.holes + \
-               (max(heights) - min(heights)) * AIPlayer.ralative_height + \
-               complete_line * AIPlayer.rows_complete + \
-               (max(heights) - (sum(heights) // len(heights))) * AIPlayer.roughness + \
-               max(heights) * AIPlayer.weighted_height + \
-               sum(heights) * AIPlayer.sum_heights
-
-
+from ai_tetris import AIPlayer
 
 class GameCanvas(Canvas):
     def clean_line(self, boxes_to_delete):
@@ -142,7 +67,14 @@ class Shape():
                  for i in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]
 
     def drop(self, board, offset):
-        return AIPlayer.drop(self.matrix, board, offset)  
+        off_x, off_y = offset
+        last_level = len(board) - len(self.matrix) + 1
+        for level in range(off_y, last_level):
+            for i in range(len(self.matrix)):
+                for j in range(len(self.matrix[0])):
+                    if board[level+i][off_x+j] == 1 and self.matrix[i][j] == 1:
+                        return level - 1
+        return last_level - 1  
 
     def __rotate(self):
         max_x = max(self.__coords, key=lambda x:x[0])[0]
@@ -278,6 +210,8 @@ class Tetris():
         self.speed = 10
         self.predictable = False
         self.ai = True
+        self.fail = False
+        self.ai_player = AIPlayer()
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -288,13 +222,18 @@ class Tetris():
         self.__next_piece_canvas()
 
     
-    def ai_player(self):
+    def ai_play(self):
         if self.ai:
-            best_offx_choice, rotate = AIPlayer.find_best_choice(self.current_piece.shape.matrix, self.game_board)
+            self.ai_player.current_board = self.game_board
+            self.ai_player.current_shape = self.current_piece.shape.matrix
+            next_move  = self.ai_player.update(self.fail, self.score)
+            rotate = next_move['rotate']
+            offx = next_move['offx']
+
             for i in range(rotate):
                 self.current_piece.rotate()
-            self.current_piece.move((best_offx_choice - self.current_piece.offset[0],0))
-            #self.hard_drop()
+            self.current_piece.move((offx - self.current_piece.offset[0],0))
+            
 
     def game_control(self, event):
         if event.char in ["a", "A", "\uf702"]:
@@ -329,6 +268,8 @@ class Tetris():
 
         self.update_piece()
 
+        
+
     def update_piece(self):
         if not self.next_piece:
             self.next_piece = Piece(self.next_canvas, (20,20))
@@ -338,14 +279,13 @@ class Tetris():
         self.__draw_next_canvas_frame()
         self.next_piece = Piece(self.next_canvas, (20,20))
 
-        self.ai_player()
-
+        self.ai_play()
         self.update_predict()
 
-        
-
     def start(self):
+        self.fail = False
         self.new_game()
+        
         self.root.after(self.speed, None)
         self.drop()
         self.root.mainloop()
@@ -358,7 +298,13 @@ class Tetris():
             self.update_piece()
 
             if self.is_game_over():
-                return 
+                if not self.ai:
+                    return
+                else:
+                    self.start()
+            else:
+                self.score += 1
+
 
             self._blockcount += 1
         
@@ -377,10 +323,14 @@ class Tetris():
 
     def is_game_over(self):
         if not self.current_piece.move((0,1)):
-            self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
-            self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
-            self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)
-            self.quit_btn.place(x = Tetris.GAME_WIDTH + 10, y = 300, width=100, height=25)
+            if not self.ai:
+                self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
+                self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
+                self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)
+                self.quit_btn.place(x = Tetris.GAME_WIDTH + 10, y = 300, width=100, height=25)
+            self.fail = True
+            if self.ai:
+                self.ai_player.update(self.fail, self.score)
             return True
         return False
 
@@ -394,7 +344,15 @@ class Tetris():
 
     def completed_lines(self):
         y_coords = [self.canvas.coords(box)[3] for box in self.current_piece.boxes]
-        self.score += self.canvas.completed_lines(y_coords)
+        completed_line = self.canvas.completed_lines(y_coords)
+        if completed_line == 1:
+            self.score += 400
+        elif completed_line == 2:
+            self.score += 1000
+        elif completed_line == 3:
+            self.score += 3000
+        elif completed_line >= 4:
+            self.score += 12000
 
     def __game_canvas(self):
         self.canvas = GameCanvas(self.root, 
@@ -411,6 +369,7 @@ class Tetris():
                             font=("Helvetica", 10, "bold"))
         #self.status.place(x = Tetris.GAME_WIDTH + 10, y = 100, width=100, height=25)
         self.status.pack()
+
     def __next_piece_canvas(self):
         self.next_canvas = Canvas(self.root,
                                  width = 100,
