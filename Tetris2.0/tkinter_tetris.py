@@ -220,6 +220,7 @@ class Tetris():
         self.__game_canvas()
         self.__level_score_label()
         self.__next_piece_canvas()
+        self.__draw_save_button()
 
     
     def ai_play(self):
@@ -354,6 +355,9 @@ class Tetris():
         elif completed_line >= 4:
             self.score += 12000
 
+    def save(self):
+        self.ai_player.save_dataset()
+
     def __game_canvas(self):
         self.canvas = GameCanvas(self.root, 
                              width = Tetris.GAME_WIDTH, 
@@ -383,6 +387,10 @@ class Tetris():
     
     def __draw_next_canvas_frame(self):
         self.next_canvas.create_rectangle(10, 10, 90, 90, tags="frame")
+
+    def __draw_save_button(self):
+        save_button = Button(self.root, text="Save", command=self.save)
+        save_button.pack()
 
     #set & get
     def __get_level(self):

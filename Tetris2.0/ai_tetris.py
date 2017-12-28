@@ -1,5 +1,6 @@
 from random import uniform, choice
 from math import floor, pow
+import pickle
 
 class Genome():
     def __init__(self, id_ = uniform(0, 1), 
@@ -66,25 +67,25 @@ class AIPlayer():
         self.genomes = children
     
     def make_child(self, mum, dad):
-        child = Genome(id_ = randint(0, 1),
-                        rows_complete = choice(mum.rows_complete, dad.rows_complete),
-                        weighted_height = choice(mum.weighted_height, dad.weighted_height),
-                        cumulative_heights = choice(mum.cumulative_heights, dad.cumulative_heights),
-                        relative_height = choice(mum.relative_height, dad.relative_height),
-                        holes = choice(mum.holes, dad.holes),
-                        roughness = choice(mum.roughness, dad.roughness))
-        if randint(0, 1) < self.mutation_rate:
-            child.rows_complete += randint(0, 1) *  mutation_step * 2 - mutation_step
-        if randint(0, 1) < self.mutation_rate:
-            child.weighted_height += randint(0, 1) *  mutation_step * 2 - mutation_step
-        if randint(0, 1) < self.mutation_rate:
-            child.cumulative_heights += randint(0, 1) *  mutation_step * 2 - mutation_step
-        if randint(0, 1) < self.mutation_rate:
-            child.relative_height += randint(0, 1) *  mutation_step * 2 - mutation_step
-        if randint(0, 1) < self.mutation_rate:
-            child.holes += randint(0, 1) *  mutation_step * 2 - mutation_step
-        if randint(0, 1) < self.mutation_rate:
-            child.roughness += randint(0, 1) *  mutation_step * 2 - mutation_step
+        child = Genome(id_ = uniform(0, 1),
+                        rows_complete = choice([mum.rows_complete, dad.rows_complete]),
+                        weighted_height = choice([mum.weighted_height, dad.weighted_height]),
+                        cumulative_heights = choice([mum.cumulative_heights, dad.cumulative_heights]),
+                        relative_height = choice([mum.relative_height, dad.relative_height]),
+                        holes = choice([mum.holes, dad.holes]),
+                        roughness = choice([mum.roughness, dad.roughness]))
+        if uniform(0, 1) < self.mutation_rate:
+            child.rows_complete += uniform(0, 1) *  mutation_step * 2 - mutation_step
+        if uniform(0, 1) < self.mutation_rate:
+            child.weighted_height += uniform(0, 1) *  mutation_step * 2 - mutation_step
+        if uniform(0, 1) < self.mutation_rate:
+            child.cumulative_heights += uniform(0, 1) *  mutation_step * 2 - mutation_step
+        if uniform(0, 1) < self.mutation_rate:
+            child.relative_height += uniform(0, 1) *  mutation_step * 2 - mutation_step
+        if uniform(0, 1) < self.mutation_rate:
+            child.holes += uniform(0, 1) *  mutation_step * 2 - mutation_step
+        if uniform(0, 1) < self.mutation_rate:
+            child.roughness += uniform(0, 1) *  mutation_step * 2 - mutation_step
         return child
     
 
@@ -171,6 +172,28 @@ class AIPlayer():
 
     def random_weighted_number(self, min_, max_):
         return floor(pow(uniform(0,1), 2) * (max_ - min_ + 1) + min_)
+
+
+    #TODO: read and save dataser, not correct yet
+    def save_dataset(self):
+        with open('genome', 'wb+') as f:
+            f.write(b'')
+
+        with open('genome', 'ab') as f:
+            for genome in self.genomes:
+                pickle.dump(genome, f, -1)
+
+        with open('archive', 'ab+') as f:
+            for genome in self.archive:
+                pickle.dump(genome, f, -1)
+            self.archive = []
+
+    def read_dataset(self):
+        with open('genome', 'rb') as f:
+            data = pickle.load(f)
+            with open('genome.txt', 'w+') as g:
+                g.write(data.fitness)
+
 
 
 
