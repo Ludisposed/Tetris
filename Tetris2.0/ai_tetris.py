@@ -170,7 +170,7 @@ class AIPlayer():
         return status
 
     def random_weighted_number(self, min_, max_):
-        return floor(pow(randint(0,1), 2) * (max_ - min_ + 1) + min_)
+        return floor(pow(uniform(0,1), 2) * (max_ - min_ + 1) + min_)
 
 
 
