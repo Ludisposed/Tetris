@@ -1,6 +1,7 @@
 from random import uniform, choice
 from math import floor, pow
 import pickle
+import os
 
 class Genome():
     def __init__(self, id_ = uniform(0, 1), 
@@ -33,10 +34,12 @@ class AIPlayer():
         self.current_board = None
         self.current_shape = None
 
+        self.scores = []
+
         self.initial_population()
 
     def initial_population(self):
-        self.genomes =[Genome() for _ in range(self.population_size)]
+        self.read_dataset()
         self.evaluate_next_genome()
 
     def evaluate_next_genome(self):
@@ -173,26 +176,20 @@ class AIPlayer():
     def random_weighted_number(self, min_, max_):
         return floor(pow(uniform(0,1), 2) * (max_ - min_ + 1) + min_)
 
-
-    #TODO: read and save dataser, not correct yet
     def save_dataset(self):
         with open('genome', 'wb+') as f:
-            f.write(b'')
-
-        with open('genome', 'ab') as f:
-            for genome in self.genomes:
-                pickle.dump(genome, f, -1)
-
-        with open('archive', 'ab+') as f:
-            for genome in self.archive:
-                pickle.dump(genome, f, -1)
-            self.archive = []
+            pickle.dump(self.genomes, f, -1)
 
     def read_dataset(self):
-        with open('genome', 'rb') as f:
-            data = pickle.load(f)
-            with open('genome.txt', 'w+') as g:
-                g.write(data.fitness)
+        if not os.path.isfile('genome'):
+            self.genomes = [Genome() for _ in range(self.population_size)]
+        else:
+            with open('genome', 'rb') as f:
+                self.genomes = pickle.load(f)
+
+
+
+            
 
 
 
