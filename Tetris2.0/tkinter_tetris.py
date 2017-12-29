@@ -227,6 +227,7 @@ class Tetris():
         if self.ai:
             self.ai_player.current_board = self.game_board
             self.ai_player.current_shape = self.current_piece.shape.matrix
+            self.ai_player.next_shape = self.next_piece.shape.matrix
             next_move  = self.ai_player.update(self.fail, self.score)
             rotate = next_move['rotate']
             offx = next_move['offx']

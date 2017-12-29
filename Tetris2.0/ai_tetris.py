@@ -33,6 +33,7 @@ class AIPlayer():
         self.current_genome = -1
         self.current_board = None
         self.current_shape = None
+        self.next_shape = None
 
         self.scores = []
 
@@ -94,16 +95,26 @@ class AIPlayer():
     
 
     def next_move(self):
-        best_choice = max(self.all_possible_move(), key = lambda x: x['rating'])
-        #print(best_choice['rating'])
+        current_possible_moves = self.all_possible_move(self.current_board, self.current_shape)
+        for move in current_possible_moves:
+            rotation = move['rotate']
+            shape = self.current_shape
+            for _ in range(rotation):
+                shape = self.rotate(shape)
+            offx = move['offx']
+            level = self.drop(self.current_board, shape, (offx, 0))
+            board = self.place_shape(self.current_board, shape, (level,offx))
+            move['rating'] += max(self.all_possible_move(board, self.next_shape), key = lambda x:x['rating'])['rating']
+        best_choice = max(current_possible_moves, key=lambda x: x['rating'])
+        
         return best_choice
 
-    def all_possible_move(self):
+    def all_possible_move(self, board, shape):
         possible_moves = []
         for rotation in range(4):
-            for offx in range(len(self.current_board[0]) - len(self.current_shape[0]) + 1):
-                level = self.drop((offx, 0))
-                status = self.board_status(self.place_shape((level, offx)))
+            for offx in range(len(board[0]) - len(shape[0]) + 1):
+                level = self.drop(board, shape, (offx, 0))
+                status = self.board_status(self.place_shape(board, shape, (level, offx)))
                 rate = status['rows_complete'] * self.genomes[self.current_genome].rows_complete +\
                        status['weighted_height'] * self.genomes[self.current_genome].weighted_height +\
                        status['cumulative_heights'] * self.genomes[self.current_genome].cumulative_heights +\
@@ -111,31 +122,31 @@ class AIPlayer():
                        status['holes'] * self.genomes[self.current_genome].holes +\
                        status['roughness'] * self.genomes[self.current_genome].roughness
                 possible_moves += [{'rotate':rotation, 'offx':offx, 'rating':rate, 'status':status}]
-            self.rotate()
+            shape = self.rotate(shape)
         
         return possible_moves
         
-    def drop(self, offset):
+    def drop(self, board, shape, offset):
         off_x, off_y = offset
-        last_level = len(self.current_board) - len(self.current_shape) + 1
+        last_level = len(board) - len(shape) + 1
         for level in range(off_y, last_level):
-            for i in range(len(self.current_shape)):
-                for j in range(len(self.current_shape[0])):
-                    if self.current_board[level+i][off_x+j] == 1 and self.current_shape[i][j] == 1:
+            for i in range(len(shape)):
+                for j in range(len(shape[0])):
+                    if board[level+i][off_x+j] == 1 and shape[i][j] == 1:
                         return level - 1
         return last_level - 1
 
-    def place_shape(self,pos):
-        board_ = [row[:] for row in self.current_board]
+    def place_shape(self, board, shape, pos):
+        board_ = [row[:] for row in board]
         level, offx = pos
-        for i in range(len(self.current_shape)):
-            for j in range(len(self.current_shape[0])):
-                if self.current_shape[i][j] == 1:
-                    board_[level+i][offx+j] = self.current_shape[i][j]
+        for i in range(len(shape)):
+            for j in range(len(shape[0])):
+                if shape[i][j] == 1:
+                    board_[level+i][offx+j] = shape[i][j]
         return board_
 
-    def rotate(self):
-        self.current_shape = [row[::-1] for row in zip(*self.current_shape)]
+    def rotate(self, shape):
+        return [row[::-1] for row in zip(*shape)]
 
     def board_status(self, board):
         status = {'rows_complete' : 0,
