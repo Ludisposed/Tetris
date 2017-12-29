@@ -28,7 +28,7 @@ class AIPlayer():
         self.mutation_step = 0.2
         self.archive = []
         self.genomes = []
-        self.population_size = 50
+        self.population_size = 10
         self.generation = 0
         self.current_genome = -1
         self.current_board = None
@@ -49,7 +49,8 @@ class AIPlayer():
 
     def update(self, fail, score):
         if fail:
-            self.genomes[self.current_genome].fitness = score - 500
+            self.scores += [score]
+            self.genomes[self.current_genome].fitness = score
             self.evaluate_next_genome()
             return
         return self.next_move()
@@ -78,17 +79,17 @@ class AIPlayer():
                         holes = choice([mum.holes, dad.holes]),
                         roughness = choice([mum.roughness, dad.roughness]))
         if uniform(0, 1) < self.mutation_rate:
-            child.rows_complete += uniform(0, 1) *  mutation_step * 2 - mutation_step
+            child.rows_complete += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         if uniform(0, 1) < self.mutation_rate:
-            child.weighted_height += uniform(0, 1) *  mutation_step * 2 - mutation_step
+            child.weighted_height += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         if uniform(0, 1) < self.mutation_rate:
-            child.cumulative_heights += uniform(0, 1) *  mutation_step * 2 - mutation_step
+            child.cumulative_heights += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         if uniform(0, 1) < self.mutation_rate:
-            child.relative_height += uniform(0, 1) *  mutation_step * 2 - mutation_step
+            child.relative_height += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         if uniform(0, 1) < self.mutation_rate:
-            child.holes += uniform(0, 1) *  mutation_step * 2 - mutation_step
+            child.holes += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         if uniform(0, 1) < self.mutation_rate:
-            child.roughness += uniform(0, 1) *  mutation_step * 2 - mutation_step
+            child.roughness += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         return child
     
 
@@ -178,14 +179,19 @@ class AIPlayer():
 
     def save_dataset(self):
         with open('genome', 'wb+') as f:
-            pickle.dump(self.genomes, f, -1)
+            pickle.dump((self.genomes, self.current_genome), f, -1)
+        with open('scores.txt','w+') as f:
+            f.write('')
+        with open('scores.txt','a') as f:
+            for score in self.scores:
+                f.write(str(score) + ' ')
 
     def read_dataset(self):
         if not os.path.isfile('genome'):
             self.genomes = [Genome() for _ in range(self.population_size)]
         else:
             with open('genome', 'rb') as f:
-                self.genomes = pickle.load(f)
+                self.genomes, self.current_genome = pickle.load(f)
 
 
 
