@@ -25,7 +25,7 @@ class Genome():
 class AIPlayer():
     def __init__(self):
         self.mutation_rate = 0.05
-        self.mutation_step = 0.2
+        self.mutation_step = 0.1
         self.archive = []
         self.genomes = []
         self.population_size = 10

@@ -201,8 +201,6 @@ class Tetris():
     GAME_WIDTH = 300
     GAME_HEIGHT = 500
     GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
-
-    MAX_RECURSIVE = 100
     
     def __init__(self):
         self._level = 1
@@ -212,7 +210,7 @@ class Tetris():
         self.predictable = False
         self.ai = True
         self.ai_player = AIPlayer()
-        self.recusive_time = 0
+        
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -287,21 +285,13 @@ class Tetris():
 
     def start(self):
         self.new_game()
-        
         self.root.after(self.speed, None)
-
-       
         self.drop()
-        
         self.root.mainloop()
         
     def drop(self):
         
         if not self.current_piece.move((0,1)):
-            self.recusive_time += 1
-            if self.recusive_time >= self.MAX_RECURSIVE:
-                self.recusive_time = 0
-                return
             self.current_piece.remove_predicts()
             self.completed_lines()
             self.game_board = self.canvas.game_board()
