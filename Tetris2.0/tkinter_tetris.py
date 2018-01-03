@@ -202,6 +202,7 @@ class Tetris():
     GAME_HEIGHT = 500
     GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
 
+    MAX_RECURSIVE = 100
     
     def __init__(self):
         self._level = 1
@@ -210,8 +211,8 @@ class Tetris():
         self.speed = 10
         self.predictable = False
         self.ai = True
-        self.fail = False
         self.ai_player = AIPlayer()
+        self.recusive_time = 0
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -220,7 +221,6 @@ class Tetris():
         self.__game_canvas()
         self.__level_score_label()
         self.__next_piece_canvas()
-        self.__draw_save_button()
 
     
     def ai_play(self):
@@ -228,7 +228,7 @@ class Tetris():
             self.ai_player.current_board = self.game_board
             self.ai_player.current_shape = self.current_piece.shape.matrix
             self.ai_player.next_shape = self.next_piece.shape.matrix
-            next_move  = self.ai_player.update(self.fail, self.score)
+            next_move  = self.ai_player.test_next_move()
             rotate = next_move['rotate']
             offx = next_move['offx']
 
@@ -249,6 +249,7 @@ class Tetris():
         elif event.char in ["w", "W", "\uf700"]:
             self.current_piece.rotate()
             self.update_predict()
+
 
     def new_game(self):
         self.level = 1
@@ -285,31 +286,33 @@ class Tetris():
         self.update_predict()
 
     def start(self):
-        self.fail = False
         self.new_game()
         
         self.root.after(self.speed, None)
+
+       
         self.drop()
+        
         self.root.mainloop()
         
     def drop(self):
+        
         if not self.current_piece.move((0,1)):
+            self.recusive_time += 1
+            if self.recusive_time >= self.MAX_RECURSIVE:
+                self.recusive_time = 0
+                return
             self.current_piece.remove_predicts()
             self.completed_lines()
             self.game_board = self.canvas.game_board()
             self.update_piece()
 
             if self.is_game_over():
-                if not self.ai:
-                    return
-                else:
-                    self.start()
+                return
             else:
+                self._blockcount += 1
                 self.score += 1
-
-
-            self._blockcount += 1
-        
+                
         self.root.after(self.speed, self.drop)
 
     def hard_drop(self):
@@ -330,9 +333,6 @@ class Tetris():
                 self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
                 self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)
                 self.quit_btn.place(x = Tetris.GAME_WIDTH + 10, y = 300, width=100, height=25)
-            self.fail = True
-            if self.ai:
-                self.ai_player.update(self.fail, self.score)
             return True
         return False
 
@@ -355,9 +355,6 @@ class Tetris():
             self.score += 3000
         elif completed_line >= 4:
             self.score += 12000
-
-    def save(self):
-        self.ai_player.save_dataset()
 
     def __game_canvas(self):
         self.canvas = GameCanvas(self.root, 
@@ -389,9 +386,6 @@ class Tetris():
     def __draw_next_canvas_frame(self):
         self.next_canvas.create_rectangle(10, 10, 90, 90, tags="frame")
 
-    def __draw_save_button(self):
-        save_button = Button(self.root, text="Save", command=self.save)
-        save_button.pack()
 
     #set & get
     def __get_level(self):

@@ -35,8 +35,6 @@ class AIPlayer():
         self.current_shape = None
         self.next_shape = None
 
-        self.scores = []
-
         self.initial_population()
 
     def initial_population(self):
@@ -50,11 +48,10 @@ class AIPlayer():
 
     def update(self, fail, score):
         if fail:
-            self.scores += [score]
-            self.genomes[self.current_genome].fitness = score
-            self.evaluate_next_genome()
-            return
-        return self.next_move()
+            score -= 5000
+       
+        self.genomes[self.current_genome].fitness = score
+        self.evaluate_next_genome()
 
     def evolve(self):
         self.current_genome = 0
@@ -94,8 +91,10 @@ class AIPlayer():
         return child
     
 
-    def next_move(self):
-        current_possible_moves = self.all_possible_move(self.current_board, self.current_shape)
+    def next_move(self, genome_idx = -1):
+        if genome_idx == -1:
+            genome_idx = self.current_genome
+        current_possible_moves = self.all_possible_move(self.current_board, self.current_shape, genome_idx)
         for move in current_possible_moves:
             rotation = move['rotate']
             shape = self.current_shape
@@ -104,23 +103,27 @@ class AIPlayer():
             offx = move['offx']
             level = self.drop(self.current_board, shape, (offx, 0))
             board = self.place_shape(self.current_board, shape, (level,offx))
-            move['rating'] += max(self.all_possible_move(board, self.next_shape), key = lambda x:x['rating'])['rating']
+            move['rating'] += max(self.all_possible_move(board, self.next_shape, genome_idx), key = lambda x:x['rating'])['rating']
         best_choice = max(current_possible_moves, key=lambda x: x['rating'])
         
         return best_choice
 
-    def all_possible_move(self, board, shape):
+    def test_next_move(self):
+        return self.next_move(genome_idx = 0)
+
+
+    def all_possible_move(self, board, shape, genome_idx):
         possible_moves = []
         for rotation in range(4):
             for offx in range(len(board[0]) - len(shape[0]) + 1):
                 level = self.drop(board, shape, (offx, 0))
                 status = self.board_status(self.place_shape(board, shape, (level, offx)))
-                rate = status['rows_complete'] * self.genomes[self.current_genome].rows_complete +\
-                       status['weighted_height'] * self.genomes[self.current_genome].weighted_height +\
-                       status['cumulative_heights'] * self.genomes[self.current_genome].cumulative_heights +\
-                       status['relative_height'] * self.genomes[self.current_genome].relative_height +\
-                       status['holes'] * self.genomes[self.current_genome].holes +\
-                       status['roughness'] * self.genomes[self.current_genome].roughness
+                rate = status['rows_complete'] * self.genomes[genome_idx].rows_complete +\
+                       status['weighted_height'] * self.genomes[genome_idx].weighted_height +\
+                       status['cumulative_heights'] * self.genomes[genome_idx].cumulative_heights +\
+                       status['relative_height'] * self.genomes[genome_idx].relative_height +\
+                       status['holes'] * self.genomes[genome_idx].holes +\
+                       status['roughness'] * self.genomes[genome_idx].roughness
                 possible_moves += [{'rotate':rotation, 'offx':offx, 'rating':rate, 'status':status}]
             shape = self.rotate(shape)
         
@@ -191,11 +194,7 @@ class AIPlayer():
     def save_dataset(self):
         with open('genome', 'wb+') as f:
             pickle.dump((self.genomes, self.current_genome), f, -1)
-        with open('scores.txt','w+') as f:
-            f.write('')
-        with open('scores.txt','a') as f:
-            for score in self.scores:
-                f.write(str(score) + ' ')
+            
 
     def read_dataset(self):
         if not os.path.isfile('genome'):
