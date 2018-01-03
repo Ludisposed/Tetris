@@ -75,14 +75,16 @@ class TetrisTrain:
     MAX_PIECE = 100
     def __init__(self):
         self.ai_player = AIPlayer()
+        self.pieces = [Piece() for _ in range(self.MAX_PIECE+1)]
         self.start()
 
     def start(self):
         self.board = Board()
+        self.current_piece_index = 0
         self.score = 0
         self.piece_placed = 0
         self.current_piece = None
-        self.next_piece = Piece()
+        self.next_piece = self.pieces[self.current_piece_index]
 
     def train(self):
         train_times = 0
@@ -90,10 +92,11 @@ class TetrisTrain:
             train_times += 1
             game_over = False
             max_clean = 0
-            while self.piece_placed <= TetrisTrain.MAX_PIECE:
+            while self.piece_placed < TetrisTrain.MAX_PIECE:
                 self.piece_placed += 1
+                self.current_piece_index += 1
                 self.current_piece = Piece(self.next_piece.piece)
-                self.next_piece = Piece()
+                self.next_piece = self.pieces[self.current_piece_index]
 
                 self.ai_player.current_board = self.board.board
                 self.ai_player.current_shape = self.current_piece.piece
