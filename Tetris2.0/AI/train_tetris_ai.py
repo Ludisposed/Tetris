@@ -1,5 +1,5 @@
 from random import choice, randint
-from ai_tetris import AIPlayer
+from AI.ai_tetris import AIPlayer
 class Piece():
     def __init__(self, piece = None):
         if not piece:
@@ -72,9 +72,10 @@ class TetrisTrain:
               [(0,1,0),(1,1,1)],
               [(1,1),(1,1)],
               [(1,1,1,1)]]
-    MAX_PIECE = 100
+    
     def __init__(self):
         self.ai_player = AIPlayer()
+        self.MAX_PIECE = 1000
         self.pieces = [Piece() for _ in range(self.MAX_PIECE+1)]
         self.start()
 
@@ -86,44 +87,70 @@ class TetrisTrain:
         self.current_piece = None
         self.next_piece = self.pieces[self.current_piece_index]
 
+        
     def train(self):
         train_times = 0
         while 1:
             train_times += 1
             game_over = False
             max_clean = 0
-            while self.piece_placed < TetrisTrain.MAX_PIECE:
+            while self.piece_placed < self.MAX_PIECE:
                 self.piece_placed += 1
                 self.current_piece_index += 1
-                self.current_piece = Piece(self.next_piece.piece)
-                self.next_piece = self.pieces[self.current_piece_index]
-
-                self.ai_player.current_board = self.board.board
-                self.ai_player.current_shape = self.current_piece.piece
-                self.ai_player.next_shape = self.next_piece.piece
-
-                next_move  = self.ai_player.next_move()
-                rotate = next_move['rotate']
-                offx = next_move['offx']
-
-                self.current_piece.rotate(times = rotate)
-                game_over = self.board.place_piece(self.current_piece, offx)
+                
+                completed_lines = self.play()
                 print(self.board)
                 print("{}/{}\nScore:{}\nTrain {} time".format(self.piece_placed, self.MAX_PIECE, self.score, train_times))
-                if game_over:
+
+                if completed_lines < 0:
+                    game_over = True
                     break
-                else:
-                    completed_lines = self.board.clean_line()
-                    if completed_lines > max_clean:
-                        max_clean = completed_lines
-                    self.score += self.get_scores(completed_lines)
-            result = "Finish this turn Score: {}  max clean lines: {} game over: {}\n".format(self.score, max_clean, game_over)
+                elif completed_lines > max_clean:
+                    max_clean = completed_lines
+                
+            self.MAX_PIECE += 100
+            result = "Finish this turn Score: {} game over: {}\n".format(self.score, game_over)
             print(result)
             self.save_train_result(result)
 
             self.ai_player.save_dataset()
             self.ai_player.update(game_over, self.score)
             self.start()
+
+    def play(self, next_piece_fixed = True):
+        self.current_piece = Piece(self.next_piece.piece)
+        if next_piece_fixed:
+            self.next_piece = self.pieces[self.current_piece_index % len(self.pieces)]
+        else:
+            self.next_piece = Piece()
+
+        self.ai_player.current_board = self.board.board
+        self.ai_player.current_shape = self.current_piece.piece
+        self.ai_player.next_shape = self.next_piece.piece
+
+        next_move  = self.ai_player.next_move()
+        rotate = next_move['rotate']
+        offx = next_move['offx']
+
+        self.current_piece.rotate(times = rotate)
+        game_over = self.board.place_piece(self.current_piece, offx)
+        
+        if game_over:
+            return -1
+        else:
+            completed_lines = self.board.clean_line()
+            self.score += self.get_scores(completed_lines)
+            return completed_lines
+      
+
+    def test(self):
+        self.start()
+        while 1:
+            completed_lines = self.play(False)
+            print(self.board)
+            print("Score:{}".format(self.score))
+            if completed_lines < 0:
+                break            
 
     def save_train_result(self, data):
         with open("train.txt", 'a+') as f:
@@ -143,10 +170,8 @@ class TetrisTrain:
             return 400000
         
 
-
-
 if __name__ == "__main__":
     tetris = TetrisTrain()
-    tetris.train()
+    tetris.test()
     
     

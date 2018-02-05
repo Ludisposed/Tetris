@@ -1,6 +1,5 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
-from ai_tetris import AIPlayer
 
 class GameCanvas(Canvas):
     def clean_line(self, boxes_to_delete):
@@ -206,10 +205,8 @@ class Tetris():
         self._level = 1
         self._score = 0
         self._blockcount = 0
-        self.speed = 10
+        self.speed = 500
         self.predictable = False
-        self.ai = True
-        self.ai_player = AIPlayer()
         
 
         self.root = Tk()
@@ -219,20 +216,6 @@ class Tetris():
         self.__game_canvas()
         self.__level_score_label()
         self.__next_piece_canvas()
-
-    
-    def ai_play(self):
-        if self.ai:
-            self.ai_player.current_board = self.game_board
-            self.ai_player.current_shape = self.current_piece.shape.matrix
-            self.ai_player.next_shape = self.next_piece.shape.matrix
-            next_move  = self.ai_player.test_next_move()
-            rotate = next_move['rotate']
-            offx = next_move['offx']
-
-            for i in range(rotate):
-                self.current_piece.rotate()
-            self.current_piece.move((offx - self.current_piece.offset[0],0))
             
 
     def game_control(self, event):
@@ -253,7 +236,7 @@ class Tetris():
         self.level = 1
         self.score = 0
         self.blockcount = 0
-        self.speed = 10
+        self.speed = 500
 
         self.canvas.delete("all")
         self.next_canvas.delete("all")
@@ -280,7 +263,7 @@ class Tetris():
         self.__draw_next_canvas_frame()
         self.next_piece = Piece(self.next_canvas, (20,20))
 
-        self.ai_play()
+        
         self.update_predict()
 
     def start(self):

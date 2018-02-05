@@ -4,16 +4,16 @@ import pickle
 import os
 
 class Genome():
-    def __init__(self, id_ = uniform(0, 1), 
-                       rows_complete = uniform(-0.5, 0.5), 
-                       weighted_height = uniform(-0.5, 0.5), 
-                       cumulative_heights = uniform(-0.5, 0.5), 
-                       relative_height = uniform(-0.5, 0.5), 
-                       holes = uniform(0, 0.5), 
-                       roughness = uniform(-0.5, 0.5),
-                       fitness = -1):
+    def __init__(self,  
+                 rows_complete = uniform(-0.5, 0.5), 
+                 weighted_height = uniform(-0.5, 0.5), 
+                 cumulative_heights = uniform(-0.5, 0.5), 
+                 relative_height = uniform(-0.5, 0.5), 
+                 holes = uniform(0, 0.5), 
+                 roughness = uniform(-0.5, 0.5),
+                 fitness = -1):
 
-        self.id_                = id_
+        
         self.rows_complete      = rows_complete
         self.weighted_height    = weighted_height
         self.cumulative_heights =  cumulative_heights
@@ -69,13 +69,14 @@ class AIPlayer():
         self.genomes = children
     
     def make_child(self, mum, dad):
-        child = Genome(id_ = uniform(0, 1),
+        child = Genome(
                         rows_complete = choice([mum.rows_complete, dad.rows_complete]),
                         weighted_height = choice([mum.weighted_height, dad.weighted_height]),
                         cumulative_heights = choice([mum.cumulative_heights, dad.cumulative_heights]),
                         relative_height = choice([mum.relative_height, dad.relative_height]),
                         holes = choice([mum.holes, dad.holes]),
-                        roughness = choice([mum.roughness, dad.roughness]))
+                        roughness = choice([mum.roughness, dad.roughness])
+                        )
         if uniform(0, 1) < self.mutation_rate:
             child.rows_complete += uniform(0, 1) *  self.mutation_step * 2 - self.mutation_step
         if uniform(0, 1) < self.mutation_rate:
