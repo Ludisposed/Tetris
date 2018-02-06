@@ -1,80 +1,11 @@
-from random import choice, randint
-from AI.ai_tetris import AIPlayer
-class Piece():
-    def __init__(self, piece = None):
-        if not piece:
-            self.piece = choice(TetrisTrain.PIECES)
-            rotate_time = randint(0,3)
-            self.rotate(times = rotate_time)
-        else:
-            self.piece = piece
-
-    @property
-    def width(self):
-        return len(self.piece[0])
-
-    @property
-    def height(self):
-        return len(self.piece)
-
-    def rotate(self, times=1):
-        for i in range(times % 4):
-            self.piece = [row[::-1] for row in zip(*self.piece)]
-
-    def __str__(self):
-       return '\n'.join(''.join(map(str,line)) for line in self.piece)
-
-class Board():
-    def __init__(self, width = 14, height = 25):
-        self.max_height = height
-        self.max_width = width
-        self.board = [[0]*width for _ in range(height)]
-        
-    def clean_line(self):
-        completed_lines = 0
-        for i, line in enumerate(self.board):
-          if line.count(0) == 0:
-            completed_lines += 1
-            del self.board[i]
-            self.board.insert(0, [0 for _ in range(self.max_width)])
-        return completed_lines
-
-    def __drop(self, piece, offset):
-        last_level = self.max_height - piece.height + 1
-        for level in range(last_level):
-            for i in range(piece.height):
-                for j in range(piece.width):
-                    if self.board[level+i][offset+j] == 1 and piece.piece[i][j] == 1:
-                        return level - 1
-        return last_level - 1
-
-    def place_piece(self, piece, offset):
-        level = self.__drop(piece, offset)
-        if level < 0:
-            return True
-        for i in range(piece.height):
-            for j in range(piece.width):
-                if piece.piece[i][j] == 1:
-                    self.board[level+i][offset+j] = piece.piece[i][j]
-        return False
-
-    def __str__(self):
-       return '-' * self.max_width  + '\n' + \
-              '\n'.join(''.join(map(str,line)) for line in self.board) + '\n' + \
-              '-' * self.max_width
-
+from genetic import GeneticAI
+import matplotlib.pyplot as plt
+from tetris_board import Piece, Board
 
 class TetrisTrain:
-    PIECES = [[(0,1,1),(1,1,0)],
-              [(1,1,0),(0,1,1)],
-              [(1,0,0),(1,1,1)],
-              [(0,0,1),(1,1,1)],
-              [(0,1,0),(1,1,1)],
-              [(1,1),(1,1)],
-              [(1,1,1,1)]]
     
     def __init__(self):
-        self.ai_player = AIPlayer()
+        
         self.MAX_PIECE = 1000
         self.pieces = [Piece() for _ in range(self.MAX_PIECE+1)]
         self.start()
@@ -85,10 +16,26 @@ class TetrisTrain:
         self.score = 0
         self.piece_placed = 0
         self.current_piece = None
-        self.next_piece = self.pieces[self.current_piece_index]
+        self.next_piece = self.pieces[self.current_piece_index]        
 
+    def train_genetic(self, model_path = "model/genetic"):
+        self.ai_player = GeneticAI(model_path)
+        train_times = 0
+        while 1:
+            completed_lines = self.play(False)
+            
+            if completed_lines < 0:
+                train_times += 1
+                print("Score:{}\nTrain {} time".format(self.score, train_times))
+                self.ai_player.update(True, self.score)
+                self.ai_player.save_dataset()
+                if train_times > 0 and train_times % 50 == 0:
+                    self.present(self.ai_player.archive)
+                self.start()
         
-    def train(self):
+
+    def train_genetic_with_limit(self, model_path = "model/genetic_limit"):
+        self.ai_player = GeneticAI(model_path)
         train_times = 0
         while 1:
             train_times += 1
@@ -115,6 +62,8 @@ class TetrisTrain:
 
             self.ai_player.save_dataset()
             self.ai_player.update(game_over, self.score)
+            if train_times > 0 and train_times % 50 == 0:
+                self.present(self.ai_player.archive)
             self.start()
 
     def play(self, next_piece_fixed = True):
@@ -141,7 +90,11 @@ class TetrisTrain:
             completed_lines = self.board.clean_line()
             self.score += self.get_scores(completed_lines)
             return completed_lines
-      
+    
+    def present(self, archive):
+        plt.plot(archive)
+        plt.ylabel('scores')
+        plt.show()
 
     def test(self):
         self.start()
@@ -172,6 +125,6 @@ class TetrisTrain:
 
 if __name__ == "__main__":
     tetris = TetrisTrain()
-    tetris.test()
+    tetris.train_genetic()
     
     
