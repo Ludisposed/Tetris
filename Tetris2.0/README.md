@@ -33,36 +33,36 @@ we just keep the first half best performance(judged by the game score it geted) 
 The following table show the improvement in score (heighter score better) over first 250 games:
 
 <table>
+    
     <tr>
-        <td>
-            <th>Game</th>
-            <th>Score</th>
-        </td>
-        <tr>
-            <td>1</td>
-            <td>14</td>
-        </tr>
-        <tr>
-            <td>50</td>
-            <td>20</td>
-        </tr>
-        <tr>
-            <td>100</td>
-            <td>15</td>
-        </tr>
-        <tr>
-            <td>150</td>
-            <td>31</td>
-        </tr>
-        <tr>
-            <td>200</td>
-            <td>53182</td>
-        </tr>
-        <tr>
-            <td>250</td>
-            <td>2655461</td>
-        </tr>
+        <th>Game</th>
+        <th>Score</th>
     </tr>
+    <tr>
+        <td>1</td>
+        <td>14</td>
+    </tr>
+    <tr>
+        <td>50</td>
+        <td>20</td>
+    </tr>
+    <tr>
+        <td>100</td>
+        <td>15</td>
+    </tr>
+    <tr>
+        <td>150</td>
+        <td>31</td>
+    </tr>
+    <tr>
+        <td>200</td>
+        <td>53182</td>
+    </tr>
+    <tr>
+        <td>250</td>
+        <td>2655461</td>
+    </tr>
+    
 </table>
 
 after about 264 times train, using "game over" to finish once training cost much more time, and after more, tetris AIPlayer works like "keep alive", but for most time it only clean one line once, and left lots holes inside
