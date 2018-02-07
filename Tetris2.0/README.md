@@ -155,5 +155,54 @@ So far there are still many things need to be done to impove this tetris aiplaye
 ## 2.0 Reinforcement Learning
 
 ### Implementation and Results
+
+I did some python version of simplfied tetris using Q learning base on the C++ code from Melax (higher score worse), here is the training result of first 250 times(each time place 10000 random pieces, and the alpha = 0.1, so it learnd quite fast)
+
+<table>
+  <thead>
+    <tr>
+      <th>Game</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>1319</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>50</td>
+      <td>184</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>100</td>
+      <td>183</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>150</td>
+      <td>175</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>153</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>250</td>
+      <td>185</td>
+    </tr>
+  </tbody>
+</table>
+
+
 ### Attempted Learning Enhancements
 

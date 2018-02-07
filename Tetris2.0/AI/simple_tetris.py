@@ -3,10 +3,47 @@ from copy import deepcopy
 import os
 import pickle
 
+class SimpleTetrisQLearning():
+    def __init__(self, model_path = "model/simple_tetris_Q"):
+        self.width = 6
+        self.alpha = 0.1
+        self.gamma = 0.8
+        self.height = 0
+        self.model_path = model_path
+        self.read_dataset()
 
-class SimpleTetrisGame():
-    def __init__(self, width = 6):
-        self.width = width
+
+    def crank(self, state, piece):
+        best = -99999999
+        loss = 0
+        best_s = state
+        for offset in range(self.width):
+            for _ in range(4):
+                piece = self.rotate(piece)
+                s, reward = self.place_piece(state, piece, offset)
+                if s != state:
+                    score = reward * (-100) + self.gamma * self.Q[s]
+                    if score > best:
+                        loss = reward
+                        best = score
+                        best_s = s
+
+        self.Q[state] = (1 - self.alpha) * self.Q[state] + self.alpha * best
+        self.height += loss
+
+        return best_s
+
+    def train(self):
+        for game in range(1<<13):
+            state = 0
+            self.height = 0
+            for i in range(10000):
+                piece = self.generate_piece()
+                state = self.crank(state, piece)
+            self.archive += [self.height]
+            self.save_dataset()
+            if game % 50 == 0:
+                print("{} {}".format(game, self.height))
 
     def generate_piece(self):
         return  (randint(0,3) << self.width) + randint(1, 3)
@@ -21,7 +58,7 @@ class SimpleTetrisGame():
         return ((p & 0b10) << (self.width - 1)) + (p & 0b1) + ((q & 0b10) << self.width) + ((q & 0b1) << 1)
 
     def place_piece(self, state, piece, offset):
-        if offset + self.piece_width(piece) >= self.width:
+        if offset + self.piece_width(piece) > self.width:
             return state, 0
 
         piece <<= offset
@@ -45,50 +82,6 @@ class SimpleTetrisGame():
             reward += 1
 
         return s, reward
-
-class SimpleTetrisQLearning():
-    def __init__(self, model_path = "model/simple_tetris_Q"):
-        self.width = 6
-        self.alpha = 0.02
-        self.gamma = 0.8
-        self.height = 0
-        self.model_path = model_path
-        self.tetris = SimpleTetrisGame(width = self.width)
-        self.read_dataset()
-
-
-    def crank(self, state, piece):
-        best = -99999999
-        loss = 0
-        p = piece
-        best_s = state
-        for offset in range(self.width):
-            for _ in range(4):
-                p = self.tetris.rotate(p)
-                s, reward = self.tetris.place_piece(state, p, offset)
-                if s != state:
-                    score = reward * (-100) + self.gamma * self.Q[s]
-                    if score > best:
-                        loss = reward
-                        best = score
-                        best_s = s
-
-        self.Q[state] = (1 - self.alpha) * self.Q[state] + self.alpha * best
-        self.height += loss
-
-        return best_s
-
-    def train(self):
-        for game in range(1<<13):
-            state = 0
-            self.height = 0
-            for i in range(10000):
-                piece = self.tetris.generate_piece()
-                state = self.crank(state, piece)
-            self.archive += [self.height]
-            self.save_dataset()
-            if game % 50 == 0:
-                print("{} {}".format(game, self.height))
 
     def save_dataset(self):
         with open(self.model_path, 'wb+') as f:
