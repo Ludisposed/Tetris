@@ -32,7 +32,6 @@ class TetrisTrain:
                 if train_times > 0 and train_times % 50 == 0:
                     self.present(self.ai_player.archive)
                 self.start()
-        
 
     def train_genetic_with_limit(self, model_path = "model/genetic_limit"):
         self.ai_player = GeneticAI(model_path)
@@ -55,15 +54,12 @@ class TetrisTrain:
                 elif completed_lines > max_clean:
                     max_clean = completed_lines
                 
-            self.MAX_PIECE += 100
-            result = "Finish this turn Score: {} game over: {}\n".format(self.score, game_over)
-            print(result)
-            self.save_train_result(result)
+            #self.MAX_PIECE += 100
 
             self.ai_player.save_dataset()
             self.ai_player.update(game_over, self.score)
-            if train_times > 0 and train_times % 50 == 0:
-                self.present(self.ai_player.archive)
+            # if train_times > 0 and train_times % 50 == 0:
+            #     self.present(self.ai_player.archive)
             self.start()
 
     def play(self, next_piece_fixed = True):
@@ -90,11 +86,6 @@ class TetrisTrain:
             completed_lines = self.board.clean_line()
             self.score += self.get_scores(completed_lines)
             return completed_lines
-    
-    def present(self, archive):
-        plt.plot(archive)
-        plt.ylabel('scores')
-        plt.show()
 
     def test(self):
         self.start()
@@ -105,10 +96,10 @@ class TetrisTrain:
             if completed_lines < 0:
                 break            
 
-    def save_train_result(self, data):
-        with open("train.txt", 'a+') as f:
-            f.write(data)  
-
+    def present(self, archive):
+        plt.plot(archive)
+        plt.ylabel('scores')
+        plt.show()
 
     def get_scores(self, completed_lines):
         if completed_lines == 0:
@@ -126,5 +117,6 @@ class TetrisTrain:
 if __name__ == "__main__":
     tetris = TetrisTrain()
     tetris.train_genetic()
+    tetris.train_genetic_with_limit()
     
     

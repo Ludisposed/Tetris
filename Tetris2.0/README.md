@@ -30,7 +30,64 @@ we just keep the first half best performance(judged by the game score it geted) 
 
 ### Implementation and Results
 
-The following table show the improvement in score (heighter score better) over first 250 games:
+The following table show the improvement in score (heighter score better) over first 260 games:
+
+<table>
+  <thead>
+    <tr>
+      <th>Game</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>10</td>
+      <td>14</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>50</td>
+      <td>21</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>100</td>
+      <td>21</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>150</td>
+      <td>24</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>8921</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>250</td>
+      <td>395345</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>260</td>
+      <td>2655461</td>
+    </tr>
+  </tbody>
+</table>
+
+after about 264 times train, using "game over" to finish once training cost much more time, and after more, tetris AIPlayer works like "keep alive", but for most time it only clean one line once, and left lots holes inside
+
+### Attempted Learning Enhancements
+
+So to improve from this, we try to train it by "limit" pieces and wish it learn/get the last rule - "clean multiple lines once, will get extra scores". we set 1000 pieces as limit to train it. The following table show the improvement in score (heighter score better) over first 300 games:
 
 <table>
   <thead>
@@ -42,52 +99,50 @@ The following table show the improvement in score (heighter score better) over f
   <tbody>
     <tr>
       <td>1</td>
-      <td>14</td>
+      <td>10</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
       <td>50</td>
-      <td>20</td>
-    </tr>
-  </tbody>
-  <tbody>
-    <tr>
-      <td>50</td>
-      <td>20</td>
+      <td>17</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
       <td>100</td>
-      <td>15</td>
+      <td>857</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
       <td>150</td>
-      <td>31</td>
+      <td>175728</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
       <td>200</td>
-      <td>53182</td>
+      <td>219327</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
       <td>250</td>
-      <td>2655461</td>
+      <td>554136</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td>300</td>
+      <td>554136</td>
     </tr>
   </tbody>
 </table>
 
-after about 264 times train, using "game over" to finish once training cost much more time, and after more, tetris AIPlayer works like "keep alive", but for most time it only clean one line once, and left lots holes inside
+this training way, the AI learned much faster, we can compare the data start from the 100th game, also the it seems get "clean multiple lines once, will get extra scores" this rule, it can clean "2 lines" once even "3 lines" than before, and holes to be fewer, but the weight of "weighted_height" become larger, that means, ai prefer to put pieces on single column, and the peek get much higher
 
-### Attempted Learning Enhancements
-
-So to improve from this, we try to train it by "limit" pieces and wish it learn/get the last rule - "clean multiple lines once, will get extra scores", in the beginning we set 100 pieces once, it seems work, more time ai can clean "2 lines" once even "3 lines", and holes to be fewer, but the weight of "weighted_height" become larger, that means, ai prefer to put pieces on single column, and the peek get much higer
+also from the 250th train to 300th train, the score never changed, it seems get a "max_score", which still not good enough from the board result
 
 ### TODO
 

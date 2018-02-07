@@ -47,7 +47,7 @@ class Board():
             self.board.insert(0, [0 for _ in range(self.max_width)])
         return completed_lines
 
-    def __drop(self, piece, offset):
+    def _drop(self, piece, offset):
         last_level = self.max_height - piece.height + 1
         for level in range(last_level):
             for i in range(piece.height):
@@ -57,7 +57,7 @@ class Board():
         return last_level - 1
 
     def place_piece(self, piece, offset):
-        level = self.__drop(piece, offset)
+        level = self._drop(piece, offset)
         if level < 0:
             return True
         for i in range(piece.height):
