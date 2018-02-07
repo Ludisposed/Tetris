@@ -1,120 +1,111 @@
 from random import randint, choice
 from copy import deepcopy
-
-class SimpleTetrisPiece():
-    PIECES = [[(0,0),(0,1)],
-              [(0,0),(1,1)],
-              [(0,1),(1,0)],
-              [(0,1),(1,1)],
-              [(1,1),(1,1)]]
-
-    def __init__(self, piece = None):
-        if not piece:
-            self.piece = choice(SimpleTetrisPiece.PIECES)
-            rotate_time = randint(0,3)
-            self.rotate(times = rotate_time)
-        else:
-            self.piece = piece
-
-    @property
-    def width(self):
-        return len(self.piece[0])
-
-    @property
-    def height(self):
-        return len(self.piece)
-
-    def rotate(self, times=1): 
-        for i in range(times % 4):
-            self.piece = [row[::-1] for row in zip(*self.piece)]
+import os
+import pickle
 
 
-class SimpleTetrisBoard():
-    def __init__(self, width = 6, height = 2):
-        self.max_height = height + 2
-        self.max_width = width
-        self.board = [[0] * self.max_width for _ in range(self.max_height)]
+class SimpleTetrisGame():
+    def __init__(self, width = 6):
+        self.width = width
 
-    def _clean_line(self):
-        for i, line in enumerate(self.board):
-          if line.count(0) == 0:
-            del self.board[i]
-            self.board.insert(0, [0 for _ in range(self.max_width)])
+    def generate_piece(self):
+        return  (randint(0,3) << self.width) + randint(1, 3)
 
-    def _reward(self):
-        self._clean_line()
+    def piece_width(self, piece):
+        return 2 if ((piece >> self.width) | (piece & ((1 << self.width) - 1))) > 1 else 1
+
+    def rotate(self, piece):
+        p = piece >> self.width
+        q = piece & ((1 << self.width) - 1)
+
+        return ((p & 0b10) << (self.width - 1)) + (p & 0b1) + ((q & 0b10) << self.width) + ((q & 0b1) << 1)
+
+    def place_piece(self, state, piece, offset):
+        if offset + self.piece_width(piece) >= self.width:
+            return state, 0
+
+        piece <<= offset
+        while (piece & state) or ((piece << self.width) & state):
+            piece <<= self.width
+
+        s = piece | state
+
+        full_line = (1 << self.width) - 1
+
+        if (s & (full_line << self.width)) == (full_line << self.width):
+            s = (s & full_line) | ((s >> (2 * self.width)) << self.width)
+
+        if (s & full_line) == full_line:
+            s >>= self.width
+
         reward = 0
-        for i in range(2):
-            if self.board[1].count(1) != 0:
-                del self.board[-1]
-                self.board.insert(0, [0 for _ in range(self.max_width)])
-                reward -= 1
-        return reward
 
-    def _drop(self, piece, offset):
-        last_level = self.max_height - piece.height + 1
-        for level in range(last_level):
-            for i in range(piece.height):
-                for j in range(piece.width):
-                    if self.board[level+i][offset+j] == 1 and piece.piece[i][j] == 1:
-                        return level - 1
-        return last_level - 1
+        while s >> (2 * self.width):
+            s >>= self.width
+            reward += 1
 
-    @property
-    def state(self):
-        return int(''.join(map(str,self.board[2] + self.board[3])), 2)
-
-    def place_piece(self, piece, offset):
-        level = self._drop(piece, offset)
-        for i in range(piece.height):
-            for j in range(piece.width):
-                if piece.piece[i][j] == 1:
-                    self.board[level+i][offset+j] = piece.piece[i][j]
-        reward = self._reward()
-        return reward
-
+        return s, reward
 
 class SimpleTetrisQLearning():
-    def __init__(self):
+    def __init__(self, model_path = "model/simple_tetris_Q"):
         self.width = 6
         self.alpha = 0.02
         self.gamma = 0.8
         self.height = 0
-        self.Q = [0 for _ in range(1 << (2 * self.width))]
+        self.model_path = model_path
+        self.tetris = SimpleTetrisGame(width = self.width)
+        self.read_dataset()
 
-    def crank(self, board, piece):
+
+    def crank(self, state, piece):
         best = -99999999
         loss = 0
-        b = board
-        for offset in range(board.max_width):
-            for r in range(4):
-                current_board = deepcopy(board)
-                current_piece = deepcopy(piece)
-                current_piece.rotate(r)
-                if offset + current_piece.width < self.width:
-                    reward = current_board.place_piece(current_piece, offset)
-                    score = reward * 100 + self.gamma * self.Q[current_board.state]
+        p = piece
+        best_s = state
+        for offset in range(self.width):
+            for _ in range(4):
+                p = self.tetris.rotate(p)
+                s, reward = self.tetris.place_piece(state, p, offset)
+                if s != state:
+                    score = reward * (-100) + self.gamma * self.Q[s]
                     if score > best:
-                        loss = reward * (-1)
+                        loss = reward
                         best = score
-                        b = current_board
+                        best_s = s
 
-        self.Q[board.state] = (1 - self.alpha) * self.Q[board.state] + self.alpha * best
+        self.Q[state] = (1 - self.alpha) * self.Q[state] + self.alpha * best
         self.height += loss
 
-        return b
+        return best_s
 
     def train(self):
         for game in range(1<<13):
-            score = 1000
+            state = 0
             self.height = 0
-            board = SimpleTetrisBoard(width = self.width)
             for i in range(10000):
-                piece = SimpleTetrisPiece()
-                board = self.crank(board, piece)
-            if game % 10 == 0:
+                piece = self.tetris.generate_piece()
+                state = self.crank(state, piece)
+            self.archive += [self.height]
+            self.save_dataset()
+            if game % 50 == 0:
                 print("{} {}".format(game, self.height))
+
+    def save_dataset(self):
+        with open(self.model_path, 'wb+') as f:
+            pickle.dump((self.Q, self.archive), f, -1)
+            
+
+    def read_dataset(self):
+        if not os.path.isfile(self.model_path):
+            self.Q = [0 for _ in range(1 << (2 * self.width))]
+            self.archive = []
+        else:
+            with open(self.model_path, 'rb') as f:
+                self.Q, self.archive = pickle.load(f)
+
 
 if __name__ == "__main__":
     t = SimpleTetrisQLearning()
     t.train()
+
+

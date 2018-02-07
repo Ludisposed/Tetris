@@ -98,7 +98,7 @@ So to improve from this, we try to train it by "limit" pieces and wish it learn/
   </thead>
   <tbody>
     <tr>
-      <td>1</td>
+      <td>10</td>
       <td>10</td>
     </tr>
   </tbody>
