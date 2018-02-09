@@ -30,7 +30,7 @@ we just keep the first half best performance(judged by the game score it geted) 
 
 ### Implementation and Results
 
-The following table show the improvement in score (heighter score better) over first 260 games:
+The following table show the improvement in score (heighter score better) over first 2600 games:
 
 <table>
   <thead>
@@ -41,49 +41,49 @@ The following table show the improvement in score (heighter score better) over f
   </thead>
   <tbody>
     <tr>
-      <td>10</td>
+      <td>100</td>
       <td>14</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>50</td>
+      <td>500</td>
       <td>21</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>100</td>
+      <td>1000</td>
       <td>21</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>150</td>
+      <td>1500</td>
       <td>24</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>200</td>
+      <td>2000</td>
       <td>8921</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>250</td>
+      <td>2500</td>
       <td>395345</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>260</td>
+      <td>2600</td>
       <td>2655461</td>
     </tr>
   </tbody>
 </table>
 
-after about 264 times train, using "game over" to finish once training cost much more time, and after more, tetris AIPlayer works like "keep alive", but for most time it only clean one line once, and left lots holes inside
+after about 2640 times train, using "game over" to finish once training cost much more time, and after more, tetris AIPlayer works like "keep alive", but for most time it only clean one line once, and left lots holes inside
 
 ### Attempted Learning Enhancements
 
@@ -98,49 +98,49 @@ So to improve from this, we try to train it by "limit" pieces and wish it learn/
   </thead>
   <tbody>
     <tr>
-      <td>10</td>
+      <td>100</td>
       <td>10</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>50</td>
+      <td>500</td>
       <td>17</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>100</td>
+      <td>1000</td>
       <td>857</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>150</td>
+      <td>1500</td>
       <td>175728</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>200</td>
+      <td>2000</td>
       <td>219327</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>250</td>
+      <td>2500</td>
       <td>554136</td>
     </tr>
   </tbody>
   <tbody>
     <tr>
-      <td>300</td>
+      <td>3000</td>
       <td>554136</td>
     </tr>
   </tbody>
 </table>
 
-this training way, the AI learned much faster, we can compare the data start from the 100th game, also the it seems get "clean multiple lines once, will get extra scores" this rule, it can clean "2 lines" once even "3 lines" than before, and holes to be fewer, but the weight of "weighted_height" become larger, that means, ai prefer to put pieces on single column, and the peek get much higher
+this training way, the AI learned much faster, we can compare the data start from the 1000th game, also the it seems get "clean multiple lines once, will get extra scores" this rule, it can clean "2 lines" once even "3 lines" than before, and holes to be fewer, but the weight of "weighted_height" become larger, that means, ai prefer to put pieces on single column, and the peek get much higher
 
 also from the 250th train to 300th train, the score never changed, it seems get a "max_score", which still not good enough from the board result
 
@@ -156,7 +156,7 @@ So far there are still many things need to be done to impove this tetris aiplaye
 
 ### Implementation and Results
 
-I did some python version of simplfied tetris using Q learning base on the C++ code from Melax (higher score worse), here is the training result of first 250 times(each time place 10000 random pieces, and the alpha = 0.1, so it learnd quite fast)
+I did some python version of simplfied tetris using Q learning base on the C++ code from Melax (higher score worse), here is the training result of first 250 times(each time place 10000 random pieces, and the alpha = 0.1, so it learnd quite fast, and it is a tiny board(2 * 6) thus also make it learn fast)
 
 <table>
   <thead>
@@ -203,6 +203,9 @@ I did some python version of simplfied tetris using Q learning base on the C++ c
   </tbody>
 </table>
 
+Then use the Q leaning in a real Tetris game, smaller board(6 * 6), here is the result of first near 100,000 times train
+
+<img src="img/q_learning_tetris_6_6.png">
 
 ### Attempted Learning Enhancements
 
