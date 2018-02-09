@@ -205,7 +205,7 @@ I did some python version of simplfied tetris using Q learning base on the C++ c
 
 Then use the Q leaning in a real Tetris game, smaller board(6 * 6), here is the result of first near 100,000 times train
 
-<img src="img/q_learning_tetris_6_6.png">
+<img src="AI/img/q_learning_tetris_6_6.png">
 
 ### Attempted Learning Enhancements
 
