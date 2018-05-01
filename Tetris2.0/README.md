@@ -1,4 +1,4 @@
-# HOW I DID THIS TETRIS AI
+# How it works
 
 ## 1.0 Genetic Algorithm
 
@@ -12,21 +12,21 @@
 - roughness
 - fitness
 
-for each piece, we choice the best position(rotate and offset) by the score it gets based on these characteristic values, plus the next piece's max score can get based on current piece's choice
+For each piece, we chooce the best position (rotate and offset) by scoring the genes + the next piece's max score can get based on current choice.
 
-for each 10th(or based on population_size value in AIPlayer) update, AI will evolve once
+For each 10th (or based on population_size value in AIPlayer) update, AI will evolve once.
 
 ### How evolve works
 
-we just keep the first half best performance(judged by the game score it geted) genes, and generate another half (of population size) genes by these first half genes. Child gene get random characteristic from parents and with mutation possible
+We keep the first half, best performance(judged by the game score it geted) genes. We generate another half (of population size) genes by these first half genes. Child gene get random characteristic from parents and with mutation possible.
 
 
 #### Rules:
 
-* This tetris board with dimensions 14 * 25(so weird I know :p but don't matter right?)
-* we measure the algorithm or performance of gene by score it get in game
-* if "game over" will minus extra scores
-* clean multiple lines once, will get extra scores
+* This tetris board has a dimension of 14 * 25
+* We measure the algorithm or performance of gene by the score it gets in the game
+* If "game over" there will be minus extra score
+* Clean multiple lines at once, there will be extra score
 
 ### Implementation and Results
 
@@ -83,11 +83,11 @@ The following table show the improvement in score (heighter score better) over f
   </tbody>
 </table>
 
-after about 2640 times train, using "game over" to finish once training cost much more time, and after more, tetris AIPlayer works like "keep alive", but for most time it only clean one line once, and left lots holes inside
+Untill about 2640 times in the train, using the "game over" to finish training, the tetris AIPlayer works like a "Keep Alive", but it  cab mostly clean one line at the time and have lotts  of holes inside
 
 ### Attempted Learning Enhancements
 
-So to improve from this, we try to train it by "limit" pieces and wish it learn/get the last rule - "clean multiple lines once, will get extra scores". we set 1000 pieces as limit to train it. The following table show the improvement in score (heighter score better) over first 300 games:
+So to improve this, we tried to train it by "holes" in the pieces and learn it the last rule - "Clean multiple lines at once, will get extra score". The piece limit was lowered, to 1000 pieces. The following table show the improvement in score (higher score) over the first 300 games:
 
 <table>
   <thead>
@@ -140,23 +140,23 @@ So to improve from this, we try to train it by "limit" pieces and wish it learn/
   </tbody>
 </table>
 
-this training way, the AI learned much faster, we can compare the data start from the 1000th game, also the it seems get "clean multiple lines once, will get extra scores" this rule, it can clean "2 lines" once even "3 lines" than before, and holes to be fewer, but the weight of "weighted_height" become larger, that means, ai prefer to put pieces on single column, and the peek get much higher
+In this training way, the AI learned much faster. We can compare the data start from the 1000th game, it seems to abide the clean rule much better, it can clean "2 lines" at once or even "3 lines", and there are fewer holes. The weight of "weighted_height" becomes larger, that means, AI prefers to put pieces on a single column, and the peeks get much higher.
 
-also from the 250th train to 300th train, the score never changed, it seems get a "max_score", which still not good enough from the board result
+From the 250th train to 300th train, the score never changed, it seems get a "max_score", which is still not good enough from the board result
 
 ### TODO
 
 So far there are still many things need to be done to impove this tetris aiplayer
 
-- [ ] estimate the algorithm, I am not sure the "keep alive" and "clean more lines once" with is better. Or should we use human instance to train AI(maybe not).
-- [ ] except genetic algorithm, can I use or combine other algorithm to impove the performance
-- [ ] another is the front end thing, it still rough haha
+- [ ] Estimate the algorithm, I am not sure which algo "keep alive" or "clean more lines once" is better.
+- [ ] Except genetic algorithm, can I use or combine other algorithms to impove the performance
+- [ ] Front End
 
 ## 2.0 Reinforcement Learning
 
 ### Implementation and Results
 
-I did some python version of simplfied tetris using Q learning base on the C++ code from Melax (higher score worse), here is the training result of first 250 times(each time place 10000 random pieces, and the alpha = 0.1, so it learnd quite fast, and it is a tiny board(2 * 6) thus also make it learn fast)
+I did some python version of simplfied tetris using Q learning base on the C++ code from Melax (higher score worse), here is the training result of first 250 times(each time place 10000 random pieces, and the alpha = 0.1, so it learnd quite fast, and it is a tiny board(2 * 6) to make it learn faster)
 
 <table>
   <thead>
@@ -203,11 +203,10 @@ I did some python version of simplfied tetris using Q learning base on the C++ c
   </tbody>
 </table>
 
-Then use the Q leaning in a real Tetris game, smaller board(6 * 6), here is the result of first near 100,000 times train
+Then use the Q leaning in a real Tetris game, smaller board (6 * 6), here this is the result of the first near 100,000 times training
 
 <img src="AI/img/q_learning_tetris_6_6.png">
 
-well using it to my full game board 14 * 25, after over 10,000 trainging, still stay in "quite newbie" state.
 
-### Attempted Learning Enhancements
+### Attempted Learning Enhancements 2.0
 
