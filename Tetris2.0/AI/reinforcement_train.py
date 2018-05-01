@@ -13,6 +13,22 @@ class QLearning():
         self.alpha = 0.1 # learning rate
         self.read_dataset()
 
+    def board_2_state(self, board, offset):
+        n = offset
+        if offset + 4 > self.width:
+            n = self.width - 4
+            m = self.width
+        else:
+            m = n + 4
+        rotate_board = [row for row in zip(*board)]   
+        peaks = [0 for _ in range(0, 4)]
+        for idx in range(n, m):
+            row = rotate_board[idx]
+            if row.count(1) > 0:
+                peaks[idx] = len(row) - row.index(1)
+                
+
+
     def crank(self, board, piece):
         game_over = 0
         best_reward = 0
@@ -23,6 +39,7 @@ class QLearning():
                 current_board = deepcopy(board)
                 piece.rotate()
                 if offset + piece.width <= self.width:
+                    before_state = self.board_2_state(current_board, offset)
                     finish = current_board.place_piece(piece, offset)
                     reward = self.get_reward(current_board.clean_line())
                     #if finish: reward -= 5000

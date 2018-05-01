@@ -207,5 +207,7 @@ Then use the Q leaning in a real Tetris game, smaller board(6 * 6), here is the 
 
 <img src="AI/img/q_learning_tetris_6_6.png">
 
+well using it to my full game board 14 * 25, after over 10,000 trainging, still stay in "quite newbie" state.
+
 ### Attempted Learning Enhancements
 
