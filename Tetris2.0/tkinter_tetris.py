@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from random import choice, randint
 
@@ -84,7 +86,6 @@ class Shape():
 
         min_x = min(rotated, key=lambda x:x[0])[0]
         min_y = min(rotated, key=lambda x:x[1])[1]
-
         return [(coord[0] - min_x, coord[1] - min_y) for coord in rotated]
 
 class Piece():
@@ -99,7 +100,6 @@ class Piece():
     def shape(self):
         return self.__shape
     
-    
     def move(self, direction):
         if all(self.__can_move(self.canvas.coords(box), direction) for box in self.boxes):
             x, y = direction
@@ -111,7 +111,6 @@ class Piece():
         return False
 
     def rotate(self):
-        
         directions = self.__shape.rotate_directions()
         if all(self.__can_move(self.canvas.coords(self.boxes[i]), directions[i]) for i in range(len(self.boxes))):
             self.__shape.rotate()
@@ -150,7 +149,6 @@ class Piece():
             self.canvas.delete(i) 
         self.canvas.update()
 
-
     def __create_boxes(self, start_point):
         boxes = []
         off_x, off_y = start_point
@@ -185,7 +183,6 @@ class Piece():
             return False
         return True        
 
-
 class Tetris():
     SHAPES = ([(0, 0), (1, 0), (0, 1), (1, 1)],     # Square
               [(0, 0), (1, 0), (2, 0), (3, 0)],     # Line
@@ -207,7 +204,6 @@ class Tetris():
         self._blockcount = 0
         self.speed = 500
         self.predictable = predictable
-        
 
         self.root = Tk()
         self.root.geometry("500x550") 
@@ -217,7 +213,6 @@ class Tetris():
         self.__level_score_label()
         self.__next_piece_canvas()
             
-
     def game_control(self, event):
         if event.char in ["a", "A", "\uf702"]:
             self.current_piece.move((-1, 0))
@@ -230,7 +225,6 @@ class Tetris():
         elif event.char in ["w", "W", "\uf700"]:
             self.current_piece.rotate()
             self.update_predict()
-
 
     def new_game(self):
         self.level = 1
@@ -252,8 +246,6 @@ class Tetris():
 
         self.update_piece()
 
-        
-
     def update_piece(self):
         if not self.next_piece:
             self.next_piece = Piece(self.next_canvas, (20,20))
@@ -262,8 +254,6 @@ class Tetris():
         self.next_canvas.delete("all")
         self.__draw_next_canvas_frame()
         self.next_piece = Piece(self.next_canvas, (20,20))
-
-        
         self.update_predict()
 
     def start(self):
@@ -273,7 +263,6 @@ class Tetris():
         self.root.mainloop()
         
     def drop(self):
-        
         if not self.current_piece.move((0,1)):
             self.current_piece.remove_predicts()
             self.completed_lines()
@@ -301,11 +290,10 @@ class Tetris():
 
     def is_game_over(self):
         if not self.current_piece.move((0,1)):
-            if not self.ai:
-                self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
-                self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
-                self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)
-                self.quit_btn.place(x = Tetris.GAME_WIDTH + 10, y = 300, width=100, height=25)
+            self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
+            self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
+            self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)
+            self.quit_btn.place(x = Tetris.GAME_WIDTH + 10, y = 300, width=100, height=25)
             return True
         return False
 
