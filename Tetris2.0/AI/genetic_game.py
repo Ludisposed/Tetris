@@ -2,7 +2,7 @@
 # @Author: Li Qin
 # @Date:   2018-05-02 08:24:09
 # @Last Modified by:   Li Qin
-# @Last Modified time: 2018-05-02 20:26:58
+# @Last Modified time: 2018-05-02 23:08:54
 
 from genetic import GeneticAI
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ class GeneticGame:
         self.next_piece = Piece()      
         self.ai_player = GeneticAI(model_path)
 
-    def play(self, next_piece_fixed = True):
+    def play(self):
         self.current_piece = Piece(self.next_piece.piece)
         self.next_piece = Piece()
 
@@ -36,7 +36,15 @@ class GeneticGame:
         else:
             completed_lines = self.board.clean_line()
             self.score += self.get_scores(completed_lines)
-            return completed_lines        
+            return completed_lines
+
+    def havefun(self):
+        while 1:
+            completed_lines = self.play()
+            print(self.board)
+            print(self.score)
+            if completed_lines < 0:
+                return      
 
     def get_scores(self, completed_lines):
         if completed_lines == 0:
@@ -49,6 +57,11 @@ class GeneticGame:
             return 40000
         elif completed_lines == 4:
             return 400000
+
+if __name__ == "__main__":
+    game = GeneticGame()
+    game.havefun()
+
         
     
     

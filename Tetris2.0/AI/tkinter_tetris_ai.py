@@ -1,10 +1,10 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
-from AI.genetic_game import GeneticGame
+from genetic_game import GeneticGame
 from time import sleep
 
 class Tetris():
     def __init__(self):
-        model_path = "AI/model/genetic"
+        model_path = "model/genetic"
         self.game = GeneticGame(model_path)
         self.box_size = 20
         self.game_width = self.game.board.max_width * self.box_size
@@ -19,7 +19,7 @@ class Tetris():
 
     def start_ai(self):
         while 1:
-            completed_lines = self.game.play(False)
+            completed_lines = self.game.play()
             self.render_game_canvas()
             self.render_score_label()
             self.render_next_piece()

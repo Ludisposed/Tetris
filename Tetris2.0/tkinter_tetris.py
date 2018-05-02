@@ -68,7 +68,11 @@ class Shape():
                  for i in range(max(self.__coords, key=lambda x: x[1])[1] + 1)]
 
     def drop(self, board, offset):
+        # print("\n\n\n")
+        # print('\n'.join(''.join(map(str, b)) for b in board))
+        # print("\n\n\n")
         off_x, off_y = offset
+        # print(off_x,off_y)
         last_level = len(board) - len(self.matrix) + 1
         for level in range(off_y, last_level):
             for i in range(len(self.matrix)):
@@ -123,7 +127,7 @@ class Piece():
     @property
     def offset(self):
         return (min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes),
-                min(int(self.canvas.coords(box)[0]) // Tetris.BOX_SIZE for box in self.boxes))
+                min(int(self.canvas.coords(box)[1]) // Tetris.BOX_SIZE for box in self.boxes))
     
     def predict_movement(self, board):
         level = self.__shape.drop(board, self.offset)
@@ -180,6 +184,10 @@ class Piece():
            x_left + x < 0 or \
            x_right + x > Tetris.GAME_WIDTH or \
            overlap & other_items:
+            # print("y_down + y > Tetris.GAME_HEIGHT : {}".format(y_down + y > Tetris.GAME_HEIGHT))
+            # print("x_left + x < 0                  : {}".format(x_left + x < 0))
+            # print("x_right + x > Tetris.GAME_WIDTH : {}".format(x_right + x > Tetris.GAME_WIDTH))
+            # print("overlap & other_items           : {}".format(overlap & other_items))
             return False
         return True        
 
@@ -290,6 +298,7 @@ class Tetris():
 
     def is_game_over(self):
         if not self.current_piece.move((0,1)):
+
             self.play_again_btn = Button(self.root, text="Play Again", command=self.play_again)
             self.quit_btn = Button(self.root, text="Quit", command=self.quit) 
             self.play_again_btn.place(x = Tetris.GAME_WIDTH + 10, y = 200, width=100, height=25)

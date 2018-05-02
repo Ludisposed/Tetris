@@ -32,7 +32,7 @@ class GameClient:
 if __name__ == "__main__":
     client = GameClient()
     client.connect(IP, PORT)
-    sleep(choice(range(5, 10)))
+    #sleep(choice(range(5, 10)))
     client.send(choice(MESSAGES))
     client.recv()
     client.close()

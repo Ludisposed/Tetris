@@ -33,8 +33,12 @@ class TetrisServer:
                         print(f"[*] Recieved message: {msg}")
                         self.send(conn, "I have recieved you")
                         print("[*] Send reply")
-        except KeyboardInterrupt:
-            pass
+        except KeyboardInterrupt as error:
+            print("here has KeyboardInterrupt")
+            print(error)
+        except Exception as error:
+            print("some else error")
+            print(error)
 
     def close(self):
         self.server.shutdown(socket.SHUT_RDWR)
