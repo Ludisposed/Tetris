@@ -116,7 +116,7 @@ class TetrisTrain:
 
 if __name__ == "__main__":
     tetris = TetrisTrain()
-    tetris.train_genetic()
-    tetris.train_genetic_with_limit()
+    tetris.play()
+    
     
     

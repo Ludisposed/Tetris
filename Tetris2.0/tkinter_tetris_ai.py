@@ -1,11 +1,12 @@
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
-from AI.train_tetris_ai import TetrisTrain
+from AI.genetic_game import GeneticGame
 from time import sleep
 
 class Tetris():
     def __init__(self):
-        self.game = TetrisTrain()
-
+        model_path = "AI/model/genetic_limit"
+        self.game = GeneticGame(model_path)
+        self.board = Board()
         self.box_size = 20
         self.game_width = self.game.board.max_width * self.box_size
         self.game_height = self.game.board.max_height * self.box_size
@@ -32,8 +33,8 @@ class Tetris():
 
     def render_game_canvas(self):
         self.canvas.delete("all")
-        width = self.game.board.max_width
-        height = self.game.board.max_height
+        width = self.board.max_width
+        height = self.board.max_height
         coords = [(j, i) for j in range(width) for i in range(height) if self.game.board.board[i][j] == 1]
         self._create_boxes(self.canvas, coords, (0,0))
 

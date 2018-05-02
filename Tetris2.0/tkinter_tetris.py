@@ -201,12 +201,12 @@ class Tetris():
     GAME_HEIGHT = 500
     GAME_START_POINT = GAME_WIDTH / 2 / BOX_SIZE * BOX_SIZE - BOX_SIZE
     
-    def __init__(self):
+    def __init__(self, predictable = False):
         self._level = 1
         self._score = 0
         self._blockcount = 0
         self.speed = 500
-        self.predictable = False
+        self.predictable = predictable
         
 
         self.root = Tk()
@@ -388,5 +388,5 @@ class Tetris():
     blockcount = property(__get_blockcount, __set_blockcount)
 
 if __name__ == '__main__':
-    game = Tetris()
+    game = Tetris(predictable = True)
     game.start()
