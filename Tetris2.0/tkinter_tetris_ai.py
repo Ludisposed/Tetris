@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
 from AI.genetic_game import GeneticGame
 from time import sleep

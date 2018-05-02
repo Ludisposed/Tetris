@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+# Action => Consequence
+MSG = {b"Line Finished": b"Add Line", 
+       b"Game Over": b"Game Over"}
+
 import socket
 
 class TetrisServer:
@@ -8,37 +12,36 @@ class TetrisServer:
         self.server.bind((ip, port))
         print(f"[*] Server is listening on {ip}:{port}")
         self.server.listen(2)
-        self.clients = []
+        self.clients = self.get_clients()
 
     def get_clients(self):
         print("[*] Waiting for players....")
-        while len(self.clients) < 2:
+        clients, client_id = {}, 0
+        while client_id < 2:
             conn, addr = self.server.accept()
-            print(f"[*] Connection from {addr}")
-            self.clients.append(conn)
-
-    def recv(self, conn):
-        msg = conn.recv(1024)
-        return msg
-
-    def send(self, conn, msg):
-        conn.sendall(msg.encode())
+            print(f"[*] Connection from {addr}, CleintID {client_id}")
+            clients[client_id] = conn
+            client_id += 1
+        return clients
 
     def start_game(self):
+        game_over = False
         try:
-            while True:
-                for conn in self.clients:
-                    msg = self.recv(conn)
+            while not game_over:
+                for client_id in self.clients.keys():
+                    msg = self.clients[client_id].recv(1024)
                     if msg:
-                        print(f"[*] Recieved message: {msg}")
-                        self.send(conn, "I have recieved you")
-                        print("[*] Send reply")
-        except KeyboardInterrupt as error:
-            print("here has KeyboardInterrupt")
-            print(error)
+                        print(f"[*] Recieved {msg}")
+                        client_id = int(not client_id)
+                        self.clients[client_id].send(MSG[msg])
+                        print(f"[*] Send to other client {MSG[msg]}")
+                        game_over = msg == b"Game Over"
+        except KeyboardInterrupt:
+            print("[!] Exiting")
         except Exception as error:
-            print("some else error")
-            print(error)
+            print(f"[!] Debugging Error\n[!] {error}")
+        finally:
+            self.close()
 
     def close(self):
         self.server.shutdown(socket.SHUT_RDWR)
@@ -47,6 +50,4 @@ class TetrisServer:
 
 if __name__ == "__main__":
     t_server = TetrisServer()
-    t_server.get_clients()
     t_server.start_game()
-    t_server.close()
