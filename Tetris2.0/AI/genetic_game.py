@@ -2,19 +2,21 @@
 # @Author: Li Qin
 # @Date:   2018-05-02 08:24:09
 # @Last Modified by:   Li Qin
-# @Last Modified time: 2018-05-02 08:49:11
+# @Last Modified time: 2018-05-02 20:26:58
 
-from .tetris_game import Piece, Board
-from .genetic import GeneticAI
+from genetic import GeneticAI
+import matplotlib.pyplot as plt
+from tetris_game import Piece, Board
 
-class GeneticGame():
-    def __init__(self, model_path):
+class GeneticGame:
+    
+    def __init__(self, model_path = "model/genetic"):
         self.board = Board()
-        self.ai_player = GeneticAI(model_path)
         self.score = 0
-        self.next_piece = Piece()
+        self.next_piece = Piece()      
+        self.ai_player = GeneticAI(model_path)
 
-    def play(self):
+    def play(self, next_piece_fixed = True):
         self.current_piece = Piece(self.next_piece.piece)
         self.next_piece = Piece()
 
@@ -34,4 +36,20 @@ class GeneticGame():
         else:
             completed_lines = self.board.clean_line()
             self.score += self.get_scores(completed_lines)
-            return completed_lines
+            return completed_lines        
+
+    def get_scores(self, completed_lines):
+        if completed_lines == 0:
+            return 1
+        elif completed_lines == 1:
+            return 400
+        elif completed_lines == 2:
+            return 4000
+        elif completed_lines == 3:
+            return 40000
+        elif completed_lines == 4:
+            return 400000
+        
+    
+    
+    
