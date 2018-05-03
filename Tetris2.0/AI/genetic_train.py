@@ -113,10 +113,9 @@ class TetrisTrain:
         elif completed_lines == 4:
             return 400000
         
-
 if __name__ == "__main__":
     tetris = TetrisTrain()
-    tetris.play()
+    tetris.train_genetic()
     
     
     
