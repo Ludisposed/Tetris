@@ -1,0 +1,45 @@
+Sun, 06 May 2018 21:55:39 tetris_server.py[line:14] INFO [*] Server is listening on localhost:9090
+Sun, 06 May 2018 21:55:39 tetris_server.py[line:19] INFO [*] Waiting for players....
+Sun, 06 May 2018 21:55:59 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 57992), CleintID 0
+Sun, 06 May 2018 21:56:03 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 57993), CleintID 1
+Sun, 06 May 2018 21:56:05 tetris_server.py[line:35] INFO [*] Recieved b'Line Finished'
+Sun, 06 May 2018 21:56:05 tetris_server.py[line:38] INFO [*] Send to other client b'Add Line'
+Sun, 06 May 2018 21:56:11 tetris_server.py[line:35] INFO [*] Recieved b'Game Over'
+Sun, 06 May 2018 21:56:11 tetris_server.py[line:38] INFO [*] Send to other client b'Game Over'
+Sun, 06 May 2018 22:10:58 tetris_server.py[line:14] INFO [*] Server is listening on localhost:9090
+Sun, 06 May 2018 22:10:58 tetris_server.py[line:19] INFO [*] Waiting for players....
+Sun, 06 May 2018 22:11:00 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58181), CleintID 0
+Sun, 06 May 2018 22:11:02 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58182), CleintID 1
+Sun, 06 May 2018 22:11:08 tetris_server.py[line:35] INFO [*] Recieved b'Line Finished'
+Sun, 06 May 2018 22:11:08 tetris_server.py[line:38] INFO [*] Send to other client b'Add Line'
+Sun, 06 May 2018 22:11:11 tetris_server.py[line:35] INFO [*] Recieved b'Game Over'
+Sun, 06 May 2018 22:11:11 tetris_server.py[line:38] INFO [*] Send to other client b'Game Over'
+Sun, 06 May 2018 22:11:11 tetris_server.py[line:50] INFO [*] Server has shutdown
+Sun, 06 May 2018 22:13:56 tetris_server.py[line:14] INFO [*] Server is listening on localhost:9090
+Sun, 06 May 2018 22:13:56 tetris_server.py[line:19] INFO [*] Waiting for players....
+Sun, 06 May 2018 22:13:57 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58274), CleintID 0
+Sun, 06 May 2018 22:13:59 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58275), CleintID 1
+Sun, 06 May 2018 22:14:04 tetris_server.py[line:35] INFO [*] Recieved b'Game Over'
+Sun, 06 May 2018 22:14:04 tetris_server.py[line:38] INFO [*] Send to other client b'Game Over'
+Sun, 06 May 2018 22:14:05 tetris_server.py[line:35] INFO [*] Recieved b'Line Finished'
+Sun, 06 May 2018 22:14:05 tetris_server.py[line:38] INFO [*] Send to other client b'Add Line'
+Sun, 06 May 2018 22:15:01 tetris_server.py[line:41] INFO [!] Exiting
+Sun, 06 May 2018 22:15:02 tetris_server.py[line:14] INFO [*] Server is listening on localhost:9090
+Sun, 06 May 2018 22:15:02 tetris_server.py[line:19] INFO [*] Waiting for players....
+Sun, 06 May 2018 22:15:18 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58307), CleintID 0
+Sun, 06 May 2018 22:15:20 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58309), CleintID 1
+Sun, 06 May 2018 22:15:21 tetris_server.py[line:35] INFO [*] Recieved b'Game Over'
+Sun, 06 May 2018 22:15:21 tetris_server.py[line:38] INFO [*] Send to other client b'Game Over'
+Sun, 06 May 2018 22:15:27 tetris_server.py[line:35] INFO [*] Recieved b'Line Finished'
+Sun, 06 May 2018 22:15:27 tetris_server.py[line:38] INFO [*] Send to other client b'Add Line'
+Sun, 06 May 2018 22:15:53 tetris_server.py[line:41] INFO [!] Exiting
+Sun, 06 May 2018 22:16:36 tetris_server.py[line:14] INFO [*] Server is listening on localhost:9090
+Sun, 06 May 2018 22:16:36 tetris_server.py[line:19] INFO [*] Waiting for players....
+Sun, 06 May 2018 22:16:37 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58318), CleintID 0
+Sun, 06 May 2018 22:16:39 tetris_server.py[line:23] INFO [*] Connection from ('127.0.0.1', 58319), CleintID 1
+Sun, 06 May 2018 22:16:46 tetris_server.py[line:35] INFO [*] Recieved b'Game Over'
+Sun, 06 May 2018 22:16:46 tetris_server.py[line:38] INFO [*] Send to other client b'Game Over'
+Sun, 06 May 2018 22:16:46 tetris_server.py[line:35] INFO [*] Recieved b'Game Over'
+Sun, 06 May 2018 22:16:46 tetris_server.py[line:38] INFO [*] Send to other client b'Game Over'
+Sun, 06 May 2018 22:16:46 tetris_server.py[line:53] ERROR [!] Debugging Error
+[!] [Errno 57] Socket is not connected
