@@ -2,11 +2,11 @@
 # @Author: Li Qin
 # @Date:   2018-05-02 08:24:09
 # @Last Modified by:   Li Qin
-# @Last Modified time: 2018-05-02 23:08:54
+# @Last Modified time: 2018-05-06 20:35:59
 
-from genetic import GeneticAI
+from .genetic import GeneticAI
 import matplotlib.pyplot as plt
-from tetris_game import Piece, Board
+from .tetris_game import Piece, Board
 
 class GeneticGame:
     

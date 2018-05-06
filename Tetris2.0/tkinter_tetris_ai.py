@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 from tkinter import Canvas, Label, Tk, StringVar, Button, LEFT
-from genetic_game import GeneticGame
+from AI.genetic_game import GeneticGame
 from time import sleep
 
 class Tetris():
