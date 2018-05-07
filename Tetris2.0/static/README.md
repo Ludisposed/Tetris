@@ -4,3 +4,4 @@
 - [ ] auto drop current shape
 - [ ] clean lines
 - [ ] score
+- [ ] rotate
