@@ -1,4 +1,11 @@
-<!DOCTYPE html>
+#!/usr/bin/python3
+
+from flask import Flask, request, send_from_directory
+app = Flask(__name__, static_url_path='')
+
+@app.route('/')
+def root():
+    return """<!DOCTYPE html>
 <html>
 <head>
     <title>Tetris</title>
@@ -23,7 +30,15 @@
 <body>
     <div id="output" class="text"></div>
     <div id="score" class="text"></div>
-    <script src=./tetris.js></script>
+    <script src=./js/tetris.js></script>
     <script type="text/javascript"></script>
 </body>
-</html>
+</html>"""
+
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('js', path)
+
+if __name__ == "__main__":
+    app.run()
+
