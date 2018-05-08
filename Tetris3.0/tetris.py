@@ -13,5 +13,7 @@ def send_js(path):
     return send_from_directory('js', path)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
+    # app.run(debug=True)
+    # Debugging is needed sometimes (DANGERZONE)
 
