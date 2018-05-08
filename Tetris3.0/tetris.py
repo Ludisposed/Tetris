@@ -6,9 +6,9 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/index')
 def index():
-    return send_from_directory('html', "tetris.html")
+    return send_from_directory('templates', "tetris.html")
 
-@app.route('/js/<path:path>')
+@app.route('/static/js/<path:path>')
 def send_js(path):
     return send_from_directory('js', path)
 
