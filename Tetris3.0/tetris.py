@@ -10,7 +10,7 @@ def index():
 
 @app.route('/static/js/<path:path>')
 def send_js(path):
-    return send_from_directory('js', path)
+    return send_from_directory('static/js', path)
 
 if __name__ == "__main__":
     app.run()
