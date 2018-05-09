@@ -173,6 +173,20 @@ var Block = function(block) {
         position.x += 1;
         blockContainer.x += SIZE;            
     };
+
+    that.getBlockRotatePositions = function(left){
+        var positions = [];
+
+        for (key in blockDefinitions) {
+            var p = {
+                x: blockDefinitions[key].x * 0 + blockDefinitions[key].y * -1 * left + position.x,
+                y: blockDefinitions[key].x * 1 * left + blockDefinitions[key].y * 0 + position.y
+            };
+            positions.push(p);                
+        }
+        return positions
+
+    }
     
     that.getBlockPositions = function(xLookAhead, yLookAhead) {
         var positions = [];
@@ -363,8 +377,12 @@ function handleKeyDown(event) {
             }
             break;
         case 38:
-            // TODO Check for collisions before rotating (to avoid the left wall bug)
-            currentBlock.rotateLeft();
+            var posRotate = currentBlock.getBlockRotatePositions(1)
+            var collision = lvl.collision(posRotate)
+            
+            if (collision === 0) {
+                currentBlock.rotateLeft();
+            }
             break;
         case 39:
             var posLookAhead = currentBlock.getBlockPositions(1,0);
