@@ -257,8 +257,6 @@ var Level = function () {
         var colorNr = colors[block.getColorNr()].nr;
         var color = colors[block.getColorNr()].color;
         for (i = 0; i < positions.length; i += 1) {
-	    console.log(matrix)
-	    console.log(colorNr)
             matrix[positions[i].y][positions[i].x] = colorNr;
             g.beginStroke(createjs.Graphics.getRGB(0,0,0));
             g.beginFill(createjs.Graphics.getRGB(color[0],color[1],color[2]));
@@ -297,7 +295,7 @@ var Level = function () {
     that.checkLines = function() {
         var i,j;
         var lines = 0;
-        var firstClearedLine = 19; // iffy
+        var firstClearedLine = 19;
         for (i = 0; i < HEIGHT; i += 1) {
             var lineHasToBeCleared = true;
             for (j = 1; j < WIDTH + 1; j += 1) {
@@ -365,6 +363,7 @@ function handleKeyDown(event) {
             }
             break;
         case 38:
+            // TODO Check for collisions before rotating (to avoid the left wall bug)
             currentBlock.rotateLeft();
             break;
         case 39:
@@ -389,27 +388,35 @@ function handleKeyDown(event) {
 }
 
 function startGame() {
-    currentBlock = Block(newBlock())
-    currentBlock.create(5, 0)
-    currentBlock.addToStage()
+    currentBlock = Block(newBlock());
+    currentBlock.create(5, 0);
+    currentBlock.addToStage();
 }
 
 function tick(event) {
-    Game.frameNumber += 1
-    if (Game.frameNumber % Game.SPEED === 0) {
-        var posLookAhead = currentBlock.getBlockPositions(0,1);
-        var collision = lvl.collision(posLookAhead);
+    if (Game.GAMEOVER === false) {
+        Game.frameNumber += 1;
+        if (Game.frameNumber % Game.SPEED === 0) {
+            var posLookAhead = currentBlock.getBlockPositions(0,1);
+            var collision = lvl.collision(posLookAhead);
             
-        if (collision === 0) {
-            currentBlock.moveDown();
-        }        
+            if (collision === 0) {
+                currentBlock.moveDown();
+            }        
      
-        if (collision === 1) {        
-            lvl.addBlock(currentBlock);
-            currentBlock.removeFromStage();        
-            currentBlock = Block(newBlock());
-            currentBlock.create(5, 0);
-            currentBlock.addToStage();
+            if (collision === 1) { 
+                lvl.addBlock(currentBlock);
+                currentBlock.removeFromStage();        
+                currentBlock = Block(newBlock());
+                currentBlock.create(5, 0);
+		pos = currentBlock.getBlockPositions(0, 0);
+		console.log(lvl.collision(pos))
+		if (lvl.collision(pos) === 0) {
+                    currentBlock.addToStage();
+		} else {
+		    Game.GAMEOVER = true;
+		}
+            }
         }
     }
 
