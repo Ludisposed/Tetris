@@ -422,13 +422,14 @@ function tick(event) {
         if (Game.frameNumber % Game.SPEED === 0) {
             var posLookAhead = currentBlock.getBlockPositions(0,1);
             var collision = lvl.collision(posLookAhead);
+            Game.LineCount += lvl.checkLines();
             
             if (collision === 0) {
                 currentBlock.moveDown();
             }        
      
-            if (collision === 1) {
-                Game.LineCount += lvl.checkLines();
+            if (collision >= 1) {
+                
                 lvl.addBlock(currentBlock);
                 currentBlock.removeFromStage();        
                 currentBlock = Block(newBlock());
