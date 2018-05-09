@@ -193,7 +193,8 @@ var Block = function(block) {
     return that;
 }
 
-var Level = function () {    
+
+var Level = function () {
     var WIDTH = 10;
     var HEIGHT = 20;
     var BLOCKDIMENSION = 10;
@@ -201,11 +202,14 @@ var Level = function () {
     var fallenBlocks = {};
     var that = {}
 
+    var add = function(a, b) {
+        return a+b;    
+    }
+
     that.create = function () {
         var a, i, j;
         for (i = 0; i < HEIGHT + 1; i += 1) {
             a = [];
-            // create row
             for (j = 0; j < WIDTH + 2; j += 1) {
                 if (j === 0 || j === WIDTH + 1 || i === HEIGHT) {
                     a[j] = 1;
@@ -301,6 +305,7 @@ var Level = function () {
             for (j = 1; j < WIDTH + 1; j += 1) {
                 if (matrix[i][j] === 0) {
                     lineHasToBeCleared = false;
+                    break;
                 }
             }
             if (lineHasToBeCleared === true) {
@@ -389,7 +394,7 @@ function handleKeyDown(event) {
 
 function startGame() {
     currentBlock = Block(newBlock());
-    currentBlock.create(5, 0);
+    currentBlock.create(5, 1);
     currentBlock.addToStage();
 }
 
@@ -404,18 +409,18 @@ function tick(event) {
                 currentBlock.moveDown();
             }        
      
-            if (collision === 1) { 
+            if (collision === 1) {
+                Game.LineCount += lvl.checkLines();
                 lvl.addBlock(currentBlock);
                 currentBlock.removeFromStage();        
                 currentBlock = Block(newBlock());
-                currentBlock.create(5, 0);
-		pos = currentBlock.getBlockPositions(0, 0);
-		console.log(lvl.collision(pos))
-		if (lvl.collision(pos) === 0) {
+                currentBlock.create(5, 1);
+                pos = currentBlock.getBlockPositions(0, 0);
+                if (lvl.collision(pos) === 0) {
                     currentBlock.addToStage();
-		} else {
-		    Game.GAMEOVER = true;
-		}
+                } else {
+                     Game.GAMEOVER = true;
+                }
             }
         }
     }
