@@ -1,14 +1,19 @@
 var stage;
 var SIZE = 10;
 var currentBlock;
+var nextBlock;
 var lvl;
+var nb;
 
 var Game = {
     SPEED : 16,
     frameNumber : 0,
     GAMEOVER : false,
-    lineCount : 0
+    lineCount : 0,
+    score : 0
 };
+
+var SCORES = [0, 10, 50, 100, 200];
 
 var colors = [
                  { nr: 0, color: [ 0, 0, 0] },       // black
@@ -18,12 +23,13 @@ var colors = [
                  { nr: 4, color: [ 0, 0, 255] },     // blue
                  { nr: 5, color: [ 0, 255, 255] },   // light blue
                  { nr: 6, color: [ 255, 255, 0] },   // yellow
-                 { nr: 7, color: [ 255, 0, 255] },   // purple
+                 { nr: 7, color: [ 255, 0, 255] },   // pink
+                 { nr: 8, color: [ 150, 0, 255] },   // purple
              ];
 
 
 var BLOCKS = [           
-                 { color: 1, coordinates:  
+                 { color: 8, coordinates:  
                      [
                          { x: 0, y: 0 },
                          { x: 0, y: -1 },
@@ -175,6 +181,10 @@ var Block = function(block) {
     };
 
     that.getBlockRotatePositions = function(left){
+        /*
+        rotate left: left = 1
+        rotate right: left = -1
+        */
         var positions = [];
 
         for (key in blockDefinitions) {
@@ -205,7 +215,158 @@ var Block = function(block) {
     };
     
     return that;
+};
+
+var ScoreLabel = function () {
+    var WIDTH = 14;
+    var HEIGHT = 6;
+    var BLOCKDIMENSION = 10;
+    var matrix = [];
+    var nextBlocks = {};
+    var that = {}
+
+    var add = function(a, b) {
+        return a+b;    
+    }
+
+    that.create = function () {
+        var a, i, j;
+        for (i = 0; i < HEIGHT; i += 1) {
+            a = [];
+            for (j = 0; j < WIDTH; j += 1) {
+                if (j === 0 || j === WIDTH - 1 || i === HEIGHT - 1 || i === 0) {
+                    a[j] = 1;
+                }
+                else {
+                    a[j] = 0;
+                }
+            }
+            matrix[i] = a;
+        }
+        nextBlocks = new createjs.Container();
+        stage.addChild(nextBlocks);
+    };
+
+    that.addToStage = function () {
+        var i,j;
+        var g = new createjs.Graphics();
+        for (i = 0; i < HEIGHT; i += 1) {
+            for (j = 0; j < WIDTH; j += 1) {
+                if (matrix[i][j] >= 1) {
+                    var color = colors[matrix[i][j]].color;
+                    g.beginStroke(createjs.Graphics.getRGB(0,0,0));
+                    g.beginFill(createjs.Graphics.getRGB(color[0],color[1],color[2]));
+                    g.drawRect(j * BLOCKDIMENSION + 130, i * BLOCKDIMENSION + 150, BLOCKDIMENSION, BLOCKDIMENSION);
+                    nextBlocks.addChild(new createjs.Shape(g));
+                }
+            }
+        }
+        
+    };
+
+    that.redraw = function () {
+        nextBlocks.removeAllChildren();
+        stage.removeChild(nextBlocks);
+
+        g = {};
+        g = new createjs.Graphics();
+        nextBlocks = {};
+        nextBlocks = new createjs.Container();
+        this.addToStage();
+
+        stage.addChild(nextBlocks);
+    };
+
+
+    that.getMatrix = function() {
+        return matrix;
+    };
+
+    that.printMatrix = function() {
+        var i,j;
+        for (i = 0; i < HEIGHT; i += 1) {
+            console.log(matrix[i]);
+        }
+    };
+
+    return that;
 }
+
+var NextLevel = function () {
+    var WIDTH = 8;
+    var HEIGHT = 8;
+    var BLOCKDIMENSION = 10;
+    var matrix = [];
+    var nextBlocks = {};
+    var that = {}
+
+    var add = function(a, b) {
+        return a+b;    
+    }
+
+    that.create = function () {
+        var a, i, j;
+        for (i = 0; i < HEIGHT; i += 1) {
+            a = [];
+            for (j = 0; j < WIDTH; j += 1) {
+                if (j === 0 || j === WIDTH - 1 || i === HEIGHT - 1 || i === 0) {
+                    a[j] = 1;
+                }
+                else {
+                    a[j] = 0;
+                }
+            }
+            matrix[i] = a;
+        }
+        nextBlocks = new createjs.Container();
+        stage.addChild(nextBlocks);
+    };
+
+    that.addToStage = function () {
+        var i,j;
+        var g = new createjs.Graphics();
+        for (i = 0; i < HEIGHT; i += 1) {
+            for (j = 0; j < WIDTH; j += 1) {
+                if (matrix[i][j] >= 1) {
+                    var color = colors[matrix[i][j]].color;
+                    g.beginStroke(createjs.Graphics.getRGB(0,0,0));
+                    g.beginFill(createjs.Graphics.getRGB(color[0],color[1],color[2]));
+                    g.drawRect(j * BLOCKDIMENSION + 160, i * BLOCKDIMENSION, BLOCKDIMENSION, BLOCKDIMENSION);
+                    nextBlocks.addChild(new createjs.Shape(g));
+                }
+            }
+        }
+        
+    };
+
+    that.redraw = function () {
+        nextBlocks.removeAllChildren();
+        stage.removeChild(nextBlocks);
+
+        g = {};
+        g = new createjs.Graphics();
+        nextBlocks = {};
+        nextBlocks = new createjs.Container();
+        this.addToStage();
+
+        stage.addChild(nextBlocks);
+    };
+
+
+    that.getMatrix = function() {
+        return matrix;
+    };
+
+    that.printMatrix = function() {
+        var i,j;
+        for (i = 0; i < HEIGHT; i += 1) {
+            console.log(matrix[i]);
+        }
+    };
+
+    return that;
+
+};
 
 
 var Level = function () {
@@ -365,10 +526,19 @@ function init() {
     stage = new createjs.Stage("TetrisCanvas");
     createjs.Ticker.on("tick", tick);    
     createjs.Ticker.setFPS(30);
-    lvl = Level()
-    lvl.create()
-    lvl.addToStage()
-    startGame()
+    lvl = Level();
+    lvl.create();
+    lvl.addToStage();
+
+    nb = NextLevel();
+    nb.create();
+    nb.addToStage();
+
+    sl = ScoreLabel();
+    sl.create();
+    sl.addToStage();
+
+    startGame();
 }
 
 function handleKeyDown(event) {
@@ -422,6 +592,7 @@ function tick(event) {
         if (Game.frameNumber % Game.SPEED === 0) {
             var posLookAhead = currentBlock.getBlockPositions(0,1);
             var collision = lvl.collision(posLookAhead);
+            Game.score += SCORES[lvl.checkLines()];
             Game.LineCount += lvl.checkLines();
             
             if (collision === 0) {
