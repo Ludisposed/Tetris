@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-# @Author: Li Qin
-# @Date:   2018-05-14 17:34:44
-# @Last Modified by:   Li Qin
-# @Last Modified time: 2018-05-15 17:19:08
-
+#!/usr/bin/python
 import gym
-
 from random import choice, randint
 
 class Piece(object):
@@ -96,9 +90,9 @@ class TetrisEnv(gym.Env):
         self.__version__ = "0.1.0"
         self.state = None
         self.current_piece = None
+        self.score = 0
 
-    def step(self, action):
-        
+    def step(self, action): 
         if action == 1:
             offset, level = self._move_left()
         elif action == 2:
@@ -106,13 +100,12 @@ class TetrisEnv(gym.Env):
         elif action == 3:
             self._rotate()
 
-        state, reward, gameove = self._move_down(offset, level)
-
-        return state, reward, gameove, {}
-
+        state, reward, gameover = self._move_down(offset, level)
+        return state, reward, gameover, {}
 
     def reset(self):
         self.game = Board()
+        self.score = 0
         self.state = self._state_after_add_new_piece()
 
     def _state_after_add_new_piece(self):
@@ -150,13 +143,13 @@ class TetrisEnv(gym.Env):
                 gameove = True
             else:
                 self.game.board = state
-                # TODO
-                # reward = self.score(self.game.clean_lines)
+                reward = self.score(self.game.clean_lines)
                 state = self._state_after_add_new_piece()
                 if state is None:
                     gameove = True
         else:
             state = self.game.place_piece(self.current_piece, offset, level)
+
         return state, reward, gameove
 
     def render(self, mode='human', close=False):
