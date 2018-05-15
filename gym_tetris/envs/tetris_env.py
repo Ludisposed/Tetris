@@ -143,7 +143,7 @@ class TetrisEnv(gym.Env):
                 gameove = True
             else:
                 self.game.board = state
-                reward = self.score(self.game.clean_lines)
+                reward = self._score(self.game.clean_lines)
                 state = self._state_after_add_new_piece()
                 if state is None:
                     gameove = True
@@ -151,6 +151,9 @@ class TetrisEnv(gym.Env):
             state = self.game.place_piece(self.current_piece, offset, level)
 
         return state, reward, gameove
+
+    def _score(self, clean_lines):
+        return [0, 1, 10, 20, 50][clean_lines]
 
     def render(self, mode='human', close=False):
         # do render later
