@@ -113,7 +113,7 @@ class TetrisEnv(gym.Env):
     def _state_after_add_new_piece(self):
         self.current_piece = Piece()
         offset, level = self.current_piece.coordinate
-        return self.game.board.place_piece(self.current_piece, offset, level)
+        return self.game.place_piece(self.current_piece, offset, level)
     
     def _move_left(self):
         offset, level = self.current_piece.coordinate[0] - 1, self.current_piece.coordinate[1]
