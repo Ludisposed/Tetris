@@ -61,9 +61,10 @@ if __name__ == "__main__":
     agent = DQNAgent(env.action_size)
     
     state = env.reset()
-
+    done = False
     while not done:
         action = agent.act(state)
+        
         next_state, reward, done, _ = env.step(action)
         agent.remember(state, action, reward, next_state, done)
         state = next_state

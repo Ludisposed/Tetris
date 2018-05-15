@@ -95,13 +95,14 @@ class TetrisEnv(gym.Env):
         self.action_size = 3
 
     def step(self, action): 
-        if action == 1:
+        
+        if action == 0:
             offset, level = self._move_left()
-        elif action == 2:
+        elif action == 1:
             offset, level = self._move_right()
-        elif action == 3:
-            self._rotate()
-
+        elif action == 2:
+            offset, level = self._rotate()
+        
         state, reward, gameover = self._move_down(offset, level)
         return state, reward, gameover, {}
 
@@ -128,16 +129,18 @@ class TetrisEnv(gym.Env):
         return offset, level
 
     def _rotate(self):
-        piece = self.current_piece.rotate()
+        piece = Piece(self.current_piece.rotate())
+
         offset, level = self.current_piece.coordinate
         if not self.game.collision(piece, offset, level):
-            self.current_piece.piece = piece
+            self.current_piece.piece = piece.piece
+        return offset, level
 
     def _move_down(self, offset, level):
         gameove = False
         reward  = 0
         level += 1
-        if self.game.coordinate(self.current_piece, offset, level):
+        if self.game.collision(self.current_piece, offset, level):
             level -= 1
             state = self.game.place_piece(self.current_piece, offset, level)
             
