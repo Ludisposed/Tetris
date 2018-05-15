@@ -67,6 +67,7 @@ class Board(object):
     def place_piece(self, piece, offset, level):
         if level == 0 and self.collision(piece, offset, level):
             return None
+
         board = [b[:] for b in self.board]
         for i in range(piece.height):
             for j in range(piece.width):
@@ -91,6 +92,7 @@ class TetrisEnv(gym.Env):
         self.state = None
         self.current_piece = None
         self.score = 0
+        self.action_size = 3
 
     def step(self, action): 
         if action == 1:
@@ -111,7 +113,7 @@ class TetrisEnv(gym.Env):
     def _state_after_add_new_piece(self):
         self.current_piece = Piece()
         offset, level = self.current_piece.coordinate
-        return self.game.place_piece(self.current_piece, offset, level)
+        return self.game.board.place_piece(self.current_piece, offset, level)
     
     def _move_left(self):
         offset, level = self.current_piece.coordinate[0] - 1, self.current_piece.coordinate[1]

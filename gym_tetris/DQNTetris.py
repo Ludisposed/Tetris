@@ -1,9 +1,18 @@
 #!/usr/bin/python
+import random
+import numpy as np
+from collections import deque
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam
+from keras import backend as K
+
+
 from envs.tetris_env import TetrisEnv
 
 class DQNAgent:
-    def __init__(self, state_size, action_size):
-        self.state_size = state_size
+    def __init__(self, action_size):
+        self.state_size = 200
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95    # discount rate
@@ -49,7 +58,7 @@ class DQNAgent:
 
 if __name__ == "__main__":
     env = TetrisEnv()
-    agent = DQNAgent(env)
+    agent = DQNAgent(env.action_size)
     
     state = env.reset()
 
