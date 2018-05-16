@@ -32,7 +32,17 @@ class Piece(object):
         piece = [p[:] for p in self.piece]
         for i in range(times % 4):
             piece = [row[::-1] for row in zip(*piece)]
+        
         return piece
+
+    def rotated_coordiates(self, piece):
+        min_y = min(self.coordinates, key=lambda x:x[0])[0]
+        min_x = min(self.coordinates, key=lambda x:x[1])[1]
+        return [(min_y + y, min_x + x) 
+                for y in range(len(piece))
+                for x in range(len(piece[y])) 
+                if piece[y][x] == 1]
+
 
     def __str__(self):
        return '\n'.join(''.join(map(str,line)) for line in self.piece)
@@ -53,15 +63,14 @@ class Board(object):
         return False
 
     def rotate_piece(self):
-        pass
-        # rotated_piece = self.current_piece.rotate()
-        # max_x = max(self.current_piece.coordinates, key=lambda x:x[1])[1]
-        # rotated = [(y, max_x - x) for y, x in self.current_piece.coordinates]
-        # min_x = min(rotated, key=lambda x:x[1])[1]
-        # min_y = min(rotated, key=lambda x:x[0])[0]
-        # new_coords = [(y - min_y, x - min_x) for y, x in self.current_piece.coordinates]
-        # if not self.collision(new_coords):
-        #     self.place_piece(new_coords)
+       
+        rotated_piece = self.current_piece.rotate()
+        rotated_corridates = self.current_piece.rotated_coordiates(rotated_piece)
+
+        if not self.collision(rotated_corridates):
+            self.place_piece(rotated_corridates)
+            self.current_piece.coordinates = rotated_corridates
+            self.current_piece.piece = rotated_piece
 
     def drop_piece(self):
         game_over = False
