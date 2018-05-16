@@ -15,7 +15,7 @@ class Piece(object):
         self.piece = choice(Piece.PIECES)
         rotate_time = randint(0, 3)
         self.piece = self.rotate(times = rotate_time)
-        self.coordinates = [(x + 5 - len(self.piece[y]) // 2, y) 
+        self.coordinates = [(y, x + 5 - len(self.piece[y]) // 2) 
                             for y in range(len(self.piece))
                             for x in range(len(self.piece[y])) 
                             if self.piece[y][x] == 1]
@@ -46,7 +46,7 @@ class Board(object):
         self.place_piece(self.current_piece.coordinates)
 
     def move_piece(self, dx, dy):
-        new_coords = [(x + dx, y + dy) for x, y in self.current_piece.coordinates]
+        new_coords = [(y + dy, x + dx) for y, x in self.current_piece.coordinates]
         if not self.collision(new_coords):
             self.place_piece(new_coords)
 
@@ -55,7 +55,7 @@ class Board(object):
 
     def drop_piece(self):
         game_over = False
-        new_coords = [(x, y+1) for x, y in self.current_piece.coordinates]
+        new_coords = [(y+1, x) for y, x in self.current_piece.coordinates]
         if not self.collision(new_coords):
             self.place_piece(new_coords)
         else:
@@ -83,11 +83,17 @@ class Board(object):
         return all(y < 20 and x in range(0, 9) and self.board[x][y] == 0 for x, y in coordinates)
 
     def place_piece(self,  new_coords):
-        for x, y in self.current_piece.coordinates:
-            self.board[x][y] = 0
+        # DEBUG!
+        print("Current coords:", self.current_piece.coordinates)
+        print("New coords", new_coords)
 
-        for x, y in new_coords:
-            self.board[x][y] = 1
+        for y, x in self.current_piece.coordinates:
+            self.board[y][x] = 0
+
+        for y, x in new_coords:
+            self.board[y][x] = 1
+
+        self.current_piece.coordinates = new_coords
 
     @property
     def state(self):
