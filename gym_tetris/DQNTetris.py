@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import random
+import os
 import numpy as np
 from collections import deque
 from keras.models import Sequential
@@ -21,6 +22,8 @@ class DQNAgent:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
+        if os.path.exists("model"):
+            self.load("model")
 
     def _build_model(self):
         # Neural Net for Deep-Q learning Model
@@ -62,18 +65,29 @@ class DQNAgent:
     def save(self, name):
         self.model.save_weights(name)
 
-
-if __name__ == "__main__":
+def train():
     env = TetrisEnv()
     agent = DQNAgent(env.action_size)
+    iter_max = 10000
+    for i in range(iter_max):
+        state = env.reset()
+        total_reward = 0
+        done = False
+        while not done:
+            action = agent.act(state)
+            
+            next_state, reward, done, info = env.step(action)
+            agent.remember(state, action, reward, next_state, done)
+            state = next_state
+            total_reward += reward
+            
+        print(f"[+] Total reward:{total_reward}")
+        agent.save("model")
+
+if __name__ == "__main__":
+    train()
     
-    state = env.reset()
-    done = False
-    while not done:
-        action = agent.act(state)
+    
         
-        next_state, reward, done, info = env.step(action)
-        agent.remember(state, action, reward, next_state, done)
-        state = next_state
-        print(info)
+    
 

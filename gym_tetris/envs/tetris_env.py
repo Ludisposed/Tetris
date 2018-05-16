@@ -109,9 +109,6 @@ class Board(object):
         return False
 
     def place_piece(self,  new_coords):
-        # DEBUG!
-        print("Current coords:", self.current_piece.coordinates)
-        print("New coords", new_coords)
         
         for y, x in self.current_piece.coordinates:
             self.board[y][x] = 0
