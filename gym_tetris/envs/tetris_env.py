@@ -13,9 +13,12 @@ class Piece(object):
 
     def __init__(self, piece = None):
         self.piece = choice(Piece.PIECES)
-        rotate_time = randint(0,3)
+        rotate_time = randint(0, 3)
         self.piece = self.rotate(times = rotate_time)
-        self.coordinates = [(dx + 5 - len(self.piece[0]) // 2, dy) for dx in self.piece[dy] for dy in range(len(self.piece))]
+        self.coordinates = [(x + 5 - len(self.piece[y]) // 2, y) 
+                            for y in range(len(self.piece))
+                            for x in range(len(self.piece[y])) 
+                            if self.piece[y][x] == 1]
 
     @property
     def width(self):
@@ -40,10 +43,10 @@ class Board(object):
         self.max_width = width
         self.board = [[0]*width for _ in range(height)]
         self.current_piece = Piece()
-        self.place_piece(self.current_piece, self.current_piece.coordinates)
+        self.place_piece(self.current_piece.coordinates)
 
     def move_piece(self, dx, dy):
-        new_coords = [[(x + dx, y + dy) for x, y in self.current_piece.coordinates]
+        new_coords = [(x + dx, y + dy) for x, y in self.current_piece.coordinates]
         if not self.collision(new_coords):
             self.place_piece(new_coords)
 
@@ -56,18 +59,18 @@ class Board(object):
         if not self.collision(new_coords):
             self.place_piece(new_coords)
         else:
-            score = [0, 1, 5, 10, 20][self.clean_lines()]
             self.current_piece = Piece()
             if not self.collision(self.current_piece.coordinates):
                 self.place_piece(self.current_piece.coordinates)
                 game_over = True
-
+        
+        score = [0, 1, 5, 10, 20][self.clean_lines()]
         return self.board, score, game_over
 
     def restart(self):
         self.board = [[0]*self.max_width for _ in range(self.max_height)]
         
-    def clean_line(self):
+    def clean_lines(self):
         completed_lines = 0
         for i, line in enumerate(self.board):
             if line.count(0) == 0:
