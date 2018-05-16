@@ -80,7 +80,7 @@ class Board(object):
         return completed_lines
 
     def collision(self, coordinates):
-        return all(y < 20 and x in range(0, 9) and self.board[x][y] == 0 for x, y in coordinates)
+        return all(y < 20 and x in range(0, 9) and self.board[y][x] == 0 for y, x in coordinates)
 
     def place_piece(self,  new_coords):
         # DEBUG!
