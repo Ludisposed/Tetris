@@ -12,15 +12,10 @@ class Piece(object):
               [(1,1,1,1)]]
 
     def __init__(self, piece = None):
-        if not piece:
-            self.piece = choice(Piece.PIECES)
-            rotate_time = randint(0,3)
-            self.piece = self.rotate(times = rotate_time)
-        else:
-            self.piece = piece
-
-        offset = 5 - len(self.piece[0]) // 2
-        self.coordinate = (offset, 0)
+        self.piece = choice(Piece.PIECES)
+        rotate_time = randint(0,3)
+        self.piece = self.rotate(times = rotate_time)
+        self.coordinates = [(dx + 5 - len(self.piece[0]) // 2, dy) for dx in self.piece[dy] for dy in range(len(self.piece))]
 
     @property
     def width(self):
@@ -44,6 +39,30 @@ class Board(object):
         self.max_height = height
         self.max_width = width
         self.board = [[0]*width for _ in range(height)]
+        self.current_piece = Piece()
+        self.place_piece(self.current_piece, self.current_piece.coordinates)
+
+    def move_piece(self, dx, dy):
+        new_coords = [[(x + dx, y + dy) for x, y in self.current_piece.coordinates]
+        if not self.collision(new_coords):
+            self.place_piece(new_coords)
+
+    def rotate_piece(self):
+        pass
+
+    def drop_piece(self):
+        game_over = False
+        new_coords = [(x, y+1) for x, y in self.current_piece.coordinates]
+        if not self.collision(new_coords):
+            self.place_piece(new_coords)
+        else:
+            score = [0, 1, 5, 10, 20][self.clean_lines()]
+            self.current_piece = Piece()
+            if not self.collision(self.current_piece.coordinates):
+                self.place_piece(self.current_piece.coordinates)
+                game_over = True
+
+        return self.board, score, game_over
 
     def restart(self):
         self.board = [[0]*self.max_width for _ in range(self.max_height)]
@@ -51,35 +70,25 @@ class Board(object):
     def clean_line(self):
         completed_lines = 0
         for i, line in enumerate(self.board):
-          if line.count(0) == 0:
-            completed_lines += 1
-            del self.board[i]
-            self.board.insert(0, [0 for _ in range(self.max_width)])
+            if line.count(0) == 0:
+                completed_lines += 1
+                del self.board[i]
+                self.board.insert(0, [0 for _ in range(self.max_width)])
         return completed_lines
 
-    def collision(self, piece, offset, level):
-        for i in range(piece.height):
-            for j in range(piece.width):
-                if self.board[level+i][offset+j] == 1 and piece.piece[i][j] == 1:
-                    return True
-        return False
+    def collision(self, coordinates):
+        return all(y < 20 and x in range(0, 9) and self.board[x][y] == 0 for x, y in coordinates)
 
-    def place_piece(self, piece, offset, level):
-        if level == 0 and self.collision(piece, offset, level):
-            return None
+    def place_piece(self,  new_coords):
+        for x, y in self.current_piece.coordinates:
+            self.board[x][y] = 0
 
-        board = [b[:] for b in self.board]
-        for i in range(piece.height):
-            for j in range(piece.width):
-                if piece.piece[i][j] == 1:
-                    board[level+i][offset+j] = piece.piece[i][j]
-        return board
+        for x, y in new_coords:
+            self.board[x][y] = 1
 
     @property
     def state(self):
          return ''.join(str(self.board[i][j]) for j in range(self.max_width) for i in range(self.max_height))
-
-    
 
     def __str__(self):
        return '-' * self.max_width  + '\n' + \
@@ -90,75 +99,22 @@ class TetrisEnv(gym.Env):
     def __init__(self):
         self.__version__ = "0.1.0"
         self.state = None
-        self.current_piece = None
-        self.score = 0
         self.action_size = 3
+        self.state_size = 200
 
-    def step(self, action): 
-        
+    def step(self, action):  
         if action == 0:
-            offset, level = self._move_left()
+            self.state.move_piece(-1, 0)
         elif action == 1:
-            offset, level = self._move_right()
+            self.state.move_piece(1, 0)
         elif action == 2:
-            offset, level = self._rotate()
+            self.state.rotate_piece()
         
-        state, reward, gameover = self._move_down(offset, level)
-        return state, reward, gameover, {}
+        state, reward, gameover = self.state.drop_piece()
+        return state, reward, gameover, state
 
     def reset(self):
-        self.game = Board()
-        self.score = 0
-        self.state = self._state_after_add_new_piece()
-
-    def _state_after_add_new_piece(self):
-        self.current_piece = Piece()
-        offset, level = self.current_piece.coordinate
-        return self.game.place_piece(self.current_piece, offset, level)
-    
-    def _move_left(self):
-        offset, level = self.current_piece.coordinate[0] - 1, self.current_piece.coordinate[1]
-        if offset < 0 or self.game.collision(self.current_piece, offset, level):
-            offset, level = self.current_piece.coordinate
-        return offset, level
-
-    def _move_right(self):
-        offset, level = self.current_piece.coordinate[0] + 1, self.current_piece.coordinate[1]
-        if offset + self.current_piece.width >= 10 or self.game.collision(self.current_piece, offset, level):
-            offset, level = self.current_piece.coordinate
-        return offset, level
-
-    def _rotate(self):
-        piece = Piece(self.current_piece.rotate())
-
-        offset, level = self.current_piece.coordinate
-        if not self.game.collision(piece, offset, level):
-            self.current_piece.piece = piece.piece
-        return offset, level
-
-    def _move_down(self, offset, level):
-        gameove = False
-        reward  = 0
-        level += 1
-        if self.game.collision(self.current_piece, offset, level):
-            level -= 1
-            state = self.game.place_piece(self.current_piece, offset, level)
-            
-            if state is None:
-                gameove = True
-            else:
-                self.game.board = state
-                reward = self._score(self.game.clean_lines)
-                state = self._state_after_add_new_piece()
-                if state is None:
-                    gameove = True
-        else:
-            state = self.game.place_piece(self.current_piece, offset, level)
-
-        return state, reward, gameove
-
-    def _score(self, clean_lines):
-        return [0, 1, 10, 20, 50][clean_lines]
+        self.state = Board()
 
     def render(self, mode='human', close=False):
         # do render later

@@ -65,8 +65,9 @@ if __name__ == "__main__":
     while not done:
         action = agent.act(state)
         
-        next_state, reward, done, _ = env.step(action)
+        next_state, reward, done, info = env.step(action)
         agent.remember(state, action, reward, next_state, done)
         state = next_state
+        print(info)
 
     print(state.score)
