@@ -68,8 +68,9 @@ class Board(object):
         if not self.move_piece(0, 1):
             self.current_piece = Piece()
             if not self.collision(self.current_piece.coordinates):
-                if not self.place_piece(self.current_piece.coordinates):
-                    game_over = True
+                self.place_piece(self.current_piece.coordinates)
+            else:
+                game_over = True
                 
         
         score = [0, 1, 5, 10, 20][self.clean_lines()]
@@ -98,15 +99,12 @@ class Board(object):
         # DEBUG!
         print("Current coords:", self.current_piece.coordinates)
         print("New coords", new_coords)
-
-        if not self.collision(new_coords):
-            for y, x in self.current_piece.coordinates:
-                self.board[y][x] = 0
-            for y, x in new_coords: 
-                self.board[y][x] = 1
-            self.current_piece.coordinates = new_coords
-            return True
-        return False
+        
+        for y, x in self.current_piece.coordinates:
+            self.board[y][x] = 0
+        for y, x in new_coords: 
+            self.board[y][x] = 1
+        self.current_piece.coordinates = new_coords
 
     @property
     def state(self):
