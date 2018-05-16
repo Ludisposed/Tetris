@@ -49,16 +49,23 @@ class Board(object):
         new_coords = [(y + dy, x + dx) for y, x in self.current_piece.coordinates]
         if not self.collision(new_coords):
             self.place_piece(new_coords)
+            return True
+        return False
 
     def rotate_piece(self):
         pass
+        # rotated_piece = self.current_piece.rotate()
+        # max_x = max(self.current_piece.coordinates, key=lambda x:x[1])[1]
+        # rotated = [(y, max_x - x) for y, x in self.current_piece.coordinates]
+        # min_x = min(rotated, key=lambda x:x[1])[1]
+        # min_y = min(rotated, key=lambda x:x[0])[0]
+        # new_coords = [(y - min_y, x - min_x) for y, x in self.current_piece.coordinates]
+        # if not self.collision(new_coords):
+        #     self.place_piece(new_coords)
 
     def drop_piece(self):
         game_over = False
-        new_coords = [(y+1, x) for y, x in self.current_piece.coordinates]
-        if not self.collision(new_coords):
-            self.place_piece(new_coords)
-        else:
+        if not self.move_piece(0, 1):
             self.current_piece = Piece()
             if not self.collision(self.current_piece.coordinates):
                 self.place_piece(self.current_piece.coordinates)
