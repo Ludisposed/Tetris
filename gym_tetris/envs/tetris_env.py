@@ -35,7 +35,7 @@ class Piece(object):
         
         return piece
 
-    def rotated_coordiates(self, piece):
+    def rotated_coordinates(self, piece):
         min_y = min(self.coordinates, key=lambda x:x[0])[0]
         min_x = min(self.coordinates, key=lambda x:x[1])[1]
         return [(min_y + y, min_x + x) 
@@ -63,20 +63,19 @@ class Board(object):
         return False
 
     def rotate_piece(self):
-       
         rotated_piece = self.current_piece.rotate()
-        rotated_corridates = self.current_piece.rotated_coordiates(rotated_piece)
+        rotated_coordinates = self.current_piece.rotated_coordinates(rotated_piece)
 
-        if not self.collision(rotated_corridates):
-            self.place_piece(rotated_corridates)
-            self.current_piece.coordinates = rotated_corridates
+        if not self.collision(rotated_coordinates):
+            self.place_piece(rotated_coordinates)
+            self.current_piece.coordinates = rotated_coordinates
             self.current_piece.piece = rotated_piece
 
     def drop_piece(self):
         game_over = False
         if not self.move_piece(0, 1):
             self.current_piece = Piece()
-            if not self.collision(self.current_piece.coordinates):
+            if not self.collision(self.current_piece.coordinates, True):
                 self.place_piece(self.current_piece.coordinates)
             else:
                 game_over = True
@@ -97,9 +96,9 @@ class Board(object):
                 self.board.insert(0, [0 for _ in range(self.max_width)])
         return completed_lines
 
-    def collision(self, coordinates):
+    def collision(self, coordinates, new_piece = False):
         for y, x in coordinates:
-            if (y, x) not in self.current_piece.coordinates:
+            if (y, x) not in self.current_piece.coordinates or new_piece:
                 if y not in range(20) or x not in range(10) or self.board[y][x] != 0:
                     return True
         return False
