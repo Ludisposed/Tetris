@@ -8,9 +8,15 @@ Your task is to implement an algorithm that places each new piece optimally. The
 
 # Tetris 2.0
 
-- GUI (Tkinter)
-- Server (2 Player)
-- AI (AlphaTetris)
-- Difficult Levels (Random Piece type amount and startup levels)
+- [x] GUI (Tkinter)
+- [x] AI (Genetic Algorithm)
 
- 
+#  Tetris 3.0
+
+- [x] JavaScript Tetris
+- [ ] 2 Player Tetris
+- [ ] AI vs Player
+
+# gym_tetris
+
+- [ ] Q Learning with Tetris(gym, keras)
