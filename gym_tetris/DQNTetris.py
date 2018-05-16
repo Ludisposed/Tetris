@@ -69,4 +69,8 @@ if __name__ == "__main__":
         agent.remember(state, action, reward, next_state, done)
         state = next_state
         print(info)
-        raw_input("Continou")
+        try:
+            raw_input("Continou")
+        except:
+            input("Continou")
+
