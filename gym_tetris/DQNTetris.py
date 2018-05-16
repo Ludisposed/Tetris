@@ -56,6 +56,13 @@ class DQNAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+    def load(self, name):
+        self.model.load_weights(name)
+
+    def save(self, name):
+        self.model.save_weights(name)
+
+
 if __name__ == "__main__":
     env = TetrisEnv()
     agent = DQNAgent(env.action_size)
@@ -69,8 +76,4 @@ if __name__ == "__main__":
         agent.remember(state, action, reward, next_state, done)
         state = next_state
         print(info)
-        try:
-            raw_input("Continou")
-        except:
-            input("Continou")
 

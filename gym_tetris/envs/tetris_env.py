@@ -81,6 +81,7 @@ class Board(object):
                 return self.board, score, game_over
 
         self.current_piece = Piece()
+
         if self.collision(self.current_piece.coordinates, True):
             game_over = True
             score = -10
