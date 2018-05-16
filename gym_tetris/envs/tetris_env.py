@@ -101,23 +101,23 @@ class Board(object):
 class TetrisEnv(gym.Env):
     def __init__(self):
         self.__version__ = "0.1.0"
-        self.state = None
+        self.board = None
         self.action_size = 3
         self.state_size = 200
 
     def step(self, action):  
         if action == 0:
-            self.state.move_piece(-1, 0)
+            self.board.move_piece(-1, 0)
         elif action == 1:
-            self.state.move_piece(1, 0)
+            self.board.move_piece(1, 0)
         elif action == 2:
-            self.state.rotate_piece()
+            self.board.rotate_piece()
         
-        state, reward, gameover = self.state.drop_piece()
-        return state, reward, gameover, state
+        state, reward, gameover = self.board.drop_piece()
+        return state, reward, gameover, str(self.board)
 
     def reset(self):
-        self.state = Board()
+        self.board = Board()
 
     def render(self, mode='human', close=False):
         # do render later
