@@ -65,24 +65,28 @@ class Board(object):
     def rotate_piece(self):
        
         rotated_piece = self.current_piece.rotate()
-        rotated_corridates = self.current_piece.rotated_coordiates(rotated_piece)
+        rotated_cooridates = self.current_piece.rotated_coordiates(rotated_piece)
 
-        if not self.collision(rotated_corridates):
-            self.place_piece(rotated_corridates)
-            self.current_piece.coordinates = rotated_corridates
+        if not self.collision(rotated_cooridates):
+            self.place_piece(rotated_cooridates)
+            self.current_piece.coordinates = rotated_cooridates
             self.current_piece.piece = rotated_piece
 
     def drop_piece(self):
         game_over = False
+        score = 0
         if not self.move_piece(0, 1):
             self.current_piece = Piece()
             if not self.collision(self.current_piece.coordinates):
                 self.place_piece(self.current_piece.coordinates)
             else:
                 game_over = True
-                
-        
-        score = [0, 1, 5, 10, 20][self.clean_lines()]
+                score = -10
+        else:
+            if not self.move_piece(0, 1):      
+                score = [0, 1, 5, 10, 20][self.clean_lines()]
+            else:
+                self.move_piece(0, -1)
         return self.board, score, game_over
 
     def restart(self):
