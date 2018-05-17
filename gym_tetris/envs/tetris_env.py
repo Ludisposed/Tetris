@@ -2,6 +2,9 @@
 import gym
 from random import choice, randint
 
+HEIGHT = 10
+WIDTH = 5
+
 class Piece(object):
     PIECES = [[(0,1,1),(1,1,0)],
               [(1,1,0),(0,1,1)],
@@ -15,7 +18,7 @@ class Piece(object):
         self.piece = choice(Piece.PIECES)
         rotate_time = randint(0, 3)
         self.piece = self.rotate(times = rotate_time)
-        self.coordinates = [(y, x + 5 - len(self.piece[y]) // 2) 
+        self.coordinates = [(y, x + (WIDTH // 2) - len(self.piece[y]) // 2) 
                             for y in range(len(self.piece))
                             for x in range(len(self.piece[y])) 
                             if self.piece[y][x] == 1]
@@ -45,7 +48,7 @@ class Piece(object):
 
 
     def __str__(self):
-       return '\n'.join(''.join(map(str,line)) for line in self.piece)
+        return '\n'.join(''.join(map(str,line)) for line in self.piece)
 
 class Board(object):
     def __init__(self, width = 10, height = 20):
@@ -81,7 +84,6 @@ class Board(object):
                 return self.board, score, game_over
 
         self.current_piece = Piece()
-
         if self.collision(self.current_piece.coordinates, True):
             game_over = True
             score = -10
@@ -104,12 +106,11 @@ class Board(object):
     def collision(self, coordinates, new_piece = False):
         for y, x in coordinates:
             if (y, x) not in self.current_piece.coordinates or new_piece:
-                if y not in range(20) or x not in range(10) or self.board[y][x] != 0:
+                if y not in range(self.max_height) or x not in range(self.max_width) or self.board[y][x] != 0:
                     return True
         return False
 
     def place_piece(self,  new_coords):
-        
         for y, x in self.current_piece.coordinates:
             self.board[y][x] = 0
         for y, x in new_coords: 
@@ -118,10 +119,10 @@ class Board(object):
 
     @property
     def state(self):
-         return ''.join(str(self.board[i][j]) for j in range(self.max_width) for i in range(self.max_height))
+        return ''.join(str(self.board[i][j]) for j in range(self.max_width) for i in range(self.max_height))
 
     def __str__(self):
-       return '-' * self.max_width  + '\n' + \
+        return '-' * self.max_width  + '\n' + \
               '\n'.join(''.join(map(str,line)) for line in self.board) + '\n' + \
               '-' * self.max_width
 
@@ -130,7 +131,7 @@ class TetrisEnv(gym.Env):
         self.__version__ = "0.1.0"
         self.board = None
         self.action_size = 3
-        self.state_size = 200
+        self.state_size = HEIGHT * WIDTH
 
     def step(self, action):  
         if action == 0:
@@ -144,7 +145,7 @@ class TetrisEnv(gym.Env):
         return state, reward, gameover, str(self.board)
 
     def reset(self):
-        self.board = Board()
+        self.board = Board(WIDTH, HEIGHT)
 
     def render(self, mode='human', close=False):
         # do render later

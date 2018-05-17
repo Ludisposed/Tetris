@@ -12,8 +12,8 @@ from keras import backend as K
 from envs.tetris_env import TetrisEnv
 
 class DQNAgent:
-    def __init__(self, action_size):
-        self.state_size = 200
+    def __init__(self, state_size, action_size):
+        self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95    # discount rate
@@ -26,7 +26,6 @@ class DQNAgent:
             self.load("model")
 
     def _build_model(self):
-        # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size, activation='relu'))
         model.add(Dense(24, activation='relu'))
@@ -67,7 +66,7 @@ class DQNAgent:
 
 def train():
     env = TetrisEnv()
-    agent = DQNAgent(env.action_size)
+    agent = DQNAgent(env.state_size, env.action_size)
     iter_max = 10000
     for i in range(iter_max):
         state = env.reset()
@@ -81,7 +80,7 @@ def train():
             state = next_state
             total_reward += reward
             
-        print(f"[+] Total reward:{total_reward}")
+        print("[+] Episode {0} ended with reward {1}".format(i, total_reward))
         agent.save("model")
 
 if __name__ == "__main__":
