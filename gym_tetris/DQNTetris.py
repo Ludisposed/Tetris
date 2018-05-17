@@ -80,10 +80,8 @@ class DQNAgent:
 def train():
     env = TetrisEnv()
     agent = DQNAgent(env.state_size, env.action_size)
-    #iter_max = 10000
-    #for i in range(iter_max):
-    i = 0
-    while True:
+    iter_max = 10000
+    for i in range(iter_max):
         i += 1
         total_reward = game_loop(agent, env)
         
@@ -104,6 +102,39 @@ def game_loop(agent, env, render = False):
         state = next_state
         total_reward += reward
     return total_reward
+
+# copy learning from somewhere else
+# def learning():
+#     minibatch = random.sample(D, mb_size)                              # Sample some moves
+
+#     inputs_shape = (mb_size,) + state.shape[1:]
+#     inputs = np.zeros(inputs_shape)
+#     targets = np.zeros((mb_size, env.action_space.n))
+
+#     for i in range(0, mb_size):
+#         state = minibatch[i][0]
+#         action = minibatch[i][1]
+#         reward = minibatch[i][2]
+#         state_new = minibatch[i][3]
+#         done = minibatch[i][4]
+        
+#     # Build Bellman equation for the Q function
+#         inputs[i:i+1] = np.expand_dims(state, axis=0)
+#         targets[i] = model.predict(state)
+#         Q_sa = model.predict(state_new)
+        
+#         if done:
+#             targets[i, action] = reward
+#         else:
+#             targets[i, action] = reward + gamma * np.max(Q_sa)
+
+#     # Train network to output the Q function
+#         model.train_on_batch(inputs, targets)
+    
+
+def test():
+    # play game
+    pass
 
 if __name__ == "__main__":
     train()
