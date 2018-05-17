@@ -69,19 +69,28 @@ def train():
     agent = DQNAgent(env.state_size, env.action_size)
     iter_max = 10000
     for i in range(iter_max):
-        state = env.reset()
-        total_reward = 0
-        done = False
-        while not done:
-            action = agent.act(state)
-            
-            next_state, reward, done, info = env.step(action)
-            agent.remember(state, action, reward, next_state, done)
-            state = next_state
-            total_reward += reward
+        
+        
+        render = True if i % 100 == 0 else False
+        total_reward = game_loop(agent, env, render)
+        
             
         print("[+] Episode {0} ended with reward {1}".format(i, total_reward))
         agent.save("model")
+
+def game_loop(agent, env, render = False):
+    total_reward = 0
+    done = False
+    state = env.reset()
+    while not done:
+        action = agent.act(state)
+        env.render()
+        
+        next_state, reward, done, info = env.step(action)
+        agent.remember(state, action, reward, next_state, done)
+        state = next_state
+        total_reward += reward
+    return total_reward
 
 if __name__ == "__main__":
     train()

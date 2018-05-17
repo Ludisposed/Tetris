@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import gym
 from random import choice, randint
+from tkinter import Canvas, Tk
 
 HEIGHT = 10
 WIDTH = 5
@@ -51,7 +52,7 @@ class Piece(object):
         return '\n'.join(''.join(map(str,line)) for line in self.piece)
 
 class Board(object):
-    def __init__(self, width = 10, height = 20):
+    def __init__(self, width = WIDTH, height = HEIGHT):
         self.max_height = height
         self.max_width = width
         self.board = [[0]*width for _ in range(height)]
@@ -132,6 +133,7 @@ class TetrisEnv(gym.Env):
         self.board = None
         self.action_size = 3
         self.state_size = HEIGHT * WIDTH
+        self.viewer = None
 
     def step(self, action):  
         if action == 0:
@@ -148,6 +150,4 @@ class TetrisEnv(gym.Env):
         self.board = Board(WIDTH, HEIGHT)
 
     def render(self, mode='human', close=False):
-        # do render later
-        pass
-
+        print(self.board)
