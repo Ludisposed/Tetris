@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import gym
 from random import choice, randint
-from tkinter import Canvas, Tk
+import numpy as np
 
 HEIGHT = 10
 WIDTH = 5
@@ -132,7 +132,7 @@ class TetrisEnv(gym.Env):
         self.__version__ = "0.1.0"
         self.board = None
         self.action_size = 3
-        self.state_size = HEIGHT * WIDTH
+        self.state_size = (WIDTH, HEIGHT)
         self.viewer = None
 
     def step(self, action):  
@@ -144,7 +144,7 @@ class TetrisEnv(gym.Env):
             self.board.rotate_piece()
         
         state, reward, gameover = self.board.drop_piece()
-        return state, reward, gameover, str(self.board)
+        return np.array(state), reward, gameover, str(self.board)
 
     def reset(self):
         self.board = Board(WIDTH, HEIGHT)

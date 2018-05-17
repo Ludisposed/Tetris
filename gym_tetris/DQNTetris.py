@@ -1,15 +1,22 @@
 #!/usr/bin/python
 import random
 import os
+import logging
 import numpy as np
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 from keras import backend as K
-
-
 from envs.tetris_env import TetrisEnv
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+                    datefmt='%a, %d %b %Y %H:%M:%S',
+                    filename='/home/aries/log/tetris_DQNtrain.log',
+                    filemode='a+')
+
+logger = logging.getLogger(__name__)
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
@@ -22,15 +29,21 @@ class DQNAgent:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
-        if os.path.exists("model"):
-            self.load("model")
+        if os.path.exists("/home/aries/tetris/gym_tetris/model") and os.path.exists("/home/aries/tetris/gym_tetris/model_tmp"):
+            try:
+                self.load("/home/aries/tetris/gym_tetris/model")
+            except:
+                logger.error("model error")
+                os.system("rm -f /home/aries/tetris/gym_tetris/model")
+                self.load("/home/aries/tetris/gym_tetris/model_tmp")
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(24, input_shape=self.state_size, activation='relu'))
         model.add(Dense(24, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+
         return model
 
     def remember(self, state, action, reward, next_state, done):
@@ -67,16 +80,16 @@ class DQNAgent:
 def train():
     env = TetrisEnv()
     agent = DQNAgent(env.state_size, env.action_size)
-    iter_max = 10000
-    for i in range(iter_max):
+    #iter_max = 10000
+    #for i in range(iter_max):
+    i = 0
+    while True:
+        i += 1
+        total_reward = game_loop(agent, env)
         
-        
-        render = True if i % 100 == 0 else False
-        total_reward = game_loop(agent, env, render)
-        
-            
-        print("[+] Episode {0} ended with reward {1}".format(i, total_reward))
-        agent.save("model")
+        logger.info("[+] Episode {0} ended with reward {1}".format(i, total_reward))
+        os.system("mv -f /home/aries/tetris/gym_tetris/model /home/aries/tetris/gym_tetris/model_tmp")
+        agent.save("/home/aries/tetris/gym_tetris/model")
 
 def game_loop(agent, env, render = False):
     total_reward = 0
@@ -84,7 +97,7 @@ def game_loop(agent, env, render = False):
     state = env.reset()
     while not done:
         action = agent.act(state)
-        env.render()
+        if render:env.render()
         
         next_state, reward, done, info = env.step(action)
         agent.remember(state, action, reward, next_state, done)
