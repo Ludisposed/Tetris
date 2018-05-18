@@ -132,7 +132,7 @@ class TetrisEnv(gym.Env):
         self.__version__ = "0.1.0"
         self.board = None
         self.action_size = 3
-        self.state_size = (WIDTH, HEIGHT)
+        self.state_size = WIDTH*HEIGHT
         self.viewer = None
 
     def step(self, action):  
