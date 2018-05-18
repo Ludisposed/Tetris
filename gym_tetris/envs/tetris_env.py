@@ -110,6 +110,7 @@ class TetrisEnv(gym.Env):
         self.game = Board()
         self.score = 0
         self.state = self._state_after_add_new_piece()
+        print(self.state)
 
     def _state_after_add_new_piece(self):
         self.current_piece = Piece()
