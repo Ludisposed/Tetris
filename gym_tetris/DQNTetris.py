@@ -5,12 +5,12 @@ import logging
 import numpy as np
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Flatten
 from keras.optimizers import Adam
 from keras import backend as K
 from envs.tetris_env import TetrisEnv
 
-HOME = "/home/aries/tetris/gym_tetris"
+HOME = ""
 
 model_path = os.path.join(HOME, "model")
 model_tmp_path = os.path.join(HOME, "model_tmp")
@@ -48,7 +48,8 @@ class DQNAgent:
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(24, input_shape=self.state_size, activation='relu'))
+        model.add(Flatten())
         model.add(Dense(24, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
