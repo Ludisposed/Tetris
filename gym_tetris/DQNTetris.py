@@ -33,18 +33,6 @@ class DQNAgent:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
-        self._load_model()
-
-    def _load_model(self):
-        
-        if os.path.exists(model_path) and os.path.exists(model_tmp_path):
-            try:
-                self.load(model_path)
-            except:
-                logger.error("model error")
-                os.system("rm -f {}".format(model_path))
-                os.system("cp {} {}".format(model_tmp_path, model_path))
-                self.load(model_path)
 
     def _build_model(self):
         model = Sequential()
@@ -87,39 +75,47 @@ class DQNAgent:
     def save(self, name):
         self.model.save_weights(name)
 
-def train():
+def train(observatime, batch_size):
     env = TetrisEnv()
     agent = DQNAgent(env.state_size, env.action_size)
-    iter_max = 10000
-    for i in range(iter_max):
-        i += 1
-        total_reward = game_loop(agent, env)
-        
-        logger.info("[+] Episode {0} ended with reward {1}".format(i, total_reward))
-        
-        agent.save(model_path)
-        os.system("cp -f {} {}".format(model_path, model_tmp_path))
-
-    agent.replay(200)
-
-    total_reward = game_loop(agent, env)    
+    train_loop(agent, env, observatime)
+    game_loop(agent, env)  
     print("[+] Ended with reward {1}".format(total_reward))
 
+    agent.replay(batch_size)
+    print('Learning Finished')
 
-def game_loop(agent, env, render = False):
-    total_reward = 0
+    test(env, agent)
+
+
+def train_loop(agent, env, observatime):
     done = False
     state = env.reset()
-    while not done:
+    state = np.expand_dims(state, axis=0) 
+    for _ in observatime:
         action = agent.act(state)
         if render:env.render()
-        
         next_state, reward, done, info = env.step(action)
+        next_state = np.expand_dims(next_state, axis=0)
         agent.remember(state, action, reward, next_state, done)
         state = next_state
-        total_reward += reward
-    return total_reward
+        if done:
+            state = env.reset()
+            state = np.expand_dims(state, axis=0)
+    print('Observing Finished')
 
+def test(env, agent):
+    observation = env.reset()
+    state = np.expand_dims(observation, axis=0)
+    done = False
+    tot_reward = 0.0
+    while not done:
+        Q = agent.act(state)        
+        action = np.argmax(Q)         
+        next_state, reward, done, info = env.step(action)
+        state = np.expand_dims(next_state, axis=0) 
+        tot_reward += reward
+    print('Game ended! Total reward: {}'.format(reward))
 
 if __name__ == "__main__":
     train()
