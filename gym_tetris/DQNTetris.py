@@ -10,14 +10,14 @@ from keras.optimizers import Adam
 from keras import backend as K
 from envs.tetris_env import TetrisEnv
 
-HOME = ""
+HOME = os.path.dirname(os.path.realpath(__file__))
 
 model_path = os.path.join(HOME, "model")
 model_tmp_path = os.path.join(HOME, "model_tmp")
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S',
-                    filename='/home/aries/log/tetris_DQNtrain.log',
+                    filename=os.path.join(HOME, 'log/tetris_DQNtrain.log'),
                     filemode='a+')
 
 logger = logging.getLogger(__name__)
