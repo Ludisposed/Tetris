@@ -1,8 +1,10 @@
 #!/usr/bin/python
 import random
 import os
+import sys
 import logging
 import numpy as np
+from datetime import datetime
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense, Flatten
@@ -12,8 +14,6 @@ from envs.tetris_env import TetrisEnv
 
 HOME = os.path.dirname(os.path.realpath(__file__))
 
-model_path = os.path.join(HOME, "model")
-model_tmp_path = os.path.join(HOME, "model_tmp")
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S',
@@ -23,7 +23,8 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger(__name__)
 
 class DQNAgent:
-    def __init__(self, state_size, action_size):
+    def __init__(self, state_size, action_size, model_name="model"):
+        self.model_name = os.path.join(HOME, model_name)
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
@@ -33,6 +34,7 @@ class DQNAgent:
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
         self.model = self._build_model()
+        self.load()
 
     def _build_model(self):
         model = Sequential()
@@ -69,40 +71,43 @@ class DQNAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-    def load(self, name):
-        self.model.load_weights(name)
+    def load(self):
+        if os.path.exists(self.model_name):
+            self.model.load_weights(self.model_name)
 
-    def save(self, name):
-        self.model.save_weights(name)
+    def save(self):
+        try:
+            self.model.save_weights(self.model_name)
+        except KeyboardInterrupt:
+            self.model.save_weights(self.model_name)
+            sys.exit(0)
 
-def train(observatime, batch_size):
+def train(train_seconds, observatime, batch_size):
+    start = datetime.now()
     env = TetrisEnv()
     agent = DQNAgent(env.state_size, env.action_size)
-    train_loop(agent, env, observatime)
-    game_loop(agent, env)  
-    print("[+] Ended with reward {1}".format(total_reward))
-
-    agent.replay(batch_size)
-    print('Learning Finished')
-
-    test(env, agent)
-
-
+    while True:
+        train_loop(agent, env, observatime) 
+        agent.replay(batch_size)
+        agent.save()
+        test(env, agent)
+        current = datetime.now()
+        if (current-start).seconds >= train_seconds:
+            break
+        
 def train_loop(agent, env, observatime):
     done = False
     state = env.reset()
     state = np.expand_dims(state, axis=0) 
-    for _ in observatime:
+    for _ in range(observatime):
         action = agent.act(state)
-        if render:env.render()
         next_state, reward, done, info = env.step(action)
         next_state = np.expand_dims(next_state, axis=0)
         agent.remember(state, action, reward, next_state, done)
         state = next_state
         if done:
             state = env.reset()
-            state = np.expand_dims(state, axis=0)
-    print('Observing Finished')
+            state = np.expand_dims(state, axis=0)     
 
 def test(env, agent):
     observation = env.reset()
@@ -116,9 +121,10 @@ def test(env, agent):
         state = np.expand_dims(next_state, axis=0) 
         tot_reward += reward
     print('Game ended! Total reward: {}'.format(reward))
+    logger.info('Game ended! Total reward: {}'.format(reward))
 
 if __name__ == "__main__":
-    train()
+    train(60*60*24,100,50)
     
     
         
